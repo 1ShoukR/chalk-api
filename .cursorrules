@@ -1,0 +1,51 @@
+# Cursor AI Rules for Chalk API
+
+## Code Style & Preferences
+
+### DO NOT:
+- Create implementation logs, progress logs, or summary markdown files after completing tasks
+- Create documentation files unless explicitly requested
+- Over-explain or create excessive documentation
+- Add dependencies without explicit approval
+
+### DO:
+- Keep responses concise and focused on the task
+- Only create files that are part of the actual application code
+- Ask before creating any documentation or auxiliary files
+
+## Dependencies
+
+### Before adding ANY new dependency:
+1. Explain what the dependency does
+2. Explain why it's needed
+3. Provide alternatives (if any exist)
+4. Wait for approval before adding to go.mod
+
+### Prefer:
+- Built-in Go standard library solutions
+- Existing dependencies already in the project
+- Manual implementation over adding new packages
+
+## Git Commit Guidelines
+
+### Commit Message Format:
+- Use conventional commit prefixes: `feat:`, `chore:`, `fix:`, `refactor:`, `docs:`, `test:`
+- One-line succinct messages
+- No emojis
+- Group related changes into logical commits
+
+### Commit Types:
+- `feat:` - New features or functionality
+- `chore:` - Maintenance, config, dependencies
+- `fix:` - Bug fixes
+- `refactor:` - Code restructuring without changing behavior
+- `docs:` - Documentation changes
+- `test:` - Adding or updating tests
+
+### Examples:
+- ✅ "feat: add user authentication models"
+- ✅ "feat: implement coach profile and related tables"
+- ✅ "chore: configure database migrations"
+- ✅ "fix: resolve subscription webhook validation"
+- ❌ "Added some stuff ✨"
+- ❌ "Update files"
