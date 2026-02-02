@@ -1,0 +1,24 @@
+# Ignore Firebase Admin credentials
+serviceAccountKey.json
+
+# Ignore compiled binaries
+/bin/
+/obj/
+
+# Ignore Go build files
+*.exe
+*.out
+*.log
+*.test
+
+# Ignore Go dependencies (if using `vendor/`)
+/vendor/
+
+# Ignore environment files
+.env
+
+# Ignore temporary files
+/tmp
+
+# Ignore IDE specific files
+.DS_Store
