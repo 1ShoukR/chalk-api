@@ -46,6 +46,12 @@
 - `docs:` - Documentation changes
 - `test:` - Adding or updating tests
 
+### Commit Rules:
+- NEVER use --trailer flag on git commits
+- NEVER add Co-authored-by, Signed-off-by, or any other trailer metadata
+- NEVER use --no-verify, --no-gpg-sign, or skip hooks
+- Commit messages should be the message ONLY, nothing else appended
+
 ### Examples:
 - ✅ "feat: add user authentication models"
 - ✅ "feat: implement coach profile and related tables"
