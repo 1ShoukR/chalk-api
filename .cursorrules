@@ -12,6 +12,9 @@
 - Keep responses concise and focused on the task
 - Only create files that are part of the actual application code
 - Ask before creating any documentation or auxiliary files
+- ALWAYS discuss implementation approach before writing code
+- Present tradeoffs between different approaches to the same problem
+- Wait for user approval on approach before implementing
 
 ## Dependencies
 
