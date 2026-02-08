@@ -101,6 +101,9 @@ func RunMigrations(db *gorm.DB) error {
 		&models.SubscriptionEvent{},
 		// Exercise models
 		&models.Exercise{},
+		// Template models
+		&models.WorkoutTemplate{},
+		&models.WorkoutTemplateExercise{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)
