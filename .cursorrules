@@ -33,6 +33,7 @@
 - One-line succinct messages
 - No emojis
 - Group related changes into logical commits
+- Commit after completing each model group
 
 ### Commit Types:
 - `feat:` - New features or functionality
@@ -49,3 +50,33 @@
 - ✅ "fix: resolve subscription webhook validation"
 - ❌ "Added some stuff ✨"
 - ❌ "Update files"
+
+## Code Quality
+
+### N+1 Query Prevention:
+- Always use Preload() for relations instead of lazy loading
+- Use Joins() for filtering on related tables
+- Batch operations where possible (Create/Update in bulk)
+- Be intentional about which relations to load
+
+### Comments:
+- Write meaningful comments only
+- Explain WHY, not WHAT
+- No obvious comments ("// Create user" above CreateUser())
+- Comment business logic, edge cases, and non-obvious decisions
+
+### Caching:
+- Cache external API responses to minimize third-party API costs
+- Use Redis for caching layer
+- Set appropriate TTLs based on data volatility
+
+## Infrastructure
+
+### Hosting:
+- Railway for all services (API, PostgreSQL, Redis)
+- AWS S3 only if Railway storage is insufficient
+- Prefer Railway ecosystem over external services when possible
+
+### Storage:
+- Railway volume or AWS S3 for file uploads (avatars, photos, certificates)
+- NOT Cloudflare R2
