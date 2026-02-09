@@ -118,6 +118,12 @@ func RunMigrations(db *gorm.DB) error {
 		&models.FoodItem{},
 		&models.FoodLogEntry{},
 		&models.QuickMacroEntry{},
+		// Progress models
+		&models.BodyMetric{},
+		&models.ProgressPhoto{},
+		// Messaging models
+		&models.Conversation{},
+		&models.Message{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)
@@ -156,6 +162,14 @@ func RunMigrations(db *gorm.DB) error {
 
 	if err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_magic_links_cleanup ON magic_links(expires_at, used)`).Error; err != nil {
 		return fmt.Errorf("failed to create magic links cleanup index: %w", err)
+	}
+
+	// One conversation per coach-client pair
+	if err := db.Exec(`
+		CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_coach_client 
+		ON conversations(coach_id, client_id)
+	`).Error; err != nil {
+		return fmt.Errorf("failed to create conversation index: %w", err)
 	}
 
 	slog.Info("Database migrations completed")
