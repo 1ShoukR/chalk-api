@@ -2,23 +2,23 @@ package clients
 
 import (
 	"chalk-api/pkg/config"
+	"chalk-api/pkg/external"
 )
 
-// ClientsCollection contains all external API clients
+// ClientsCollection wraps external integrations
+// Deprecated: Use pkg/external.Collection directly
 type ClientsCollection struct {
-	// Add client fields here as you create them
-	// Example:
-	// RedisClient  *redis.Client
+	External *external.Collection
 }
 
-// InitializeClients initializes all external API clients
+// InitializeClients initializes all external API integrations
 func InitializeClients(cfg config.Environment) (*ClientsCollection, error) {
 	return &ClientsCollection{
-		// Initialize clients here
+		External: external.Initialize(cfg),
 	}, nil
 }
 
 // CloseAll closes all client connections
 func (c *ClientsCollection) CloseAll() {
-	// Close all clients here
+	// External APIs don't need cleanup (stateless HTTP)
 }

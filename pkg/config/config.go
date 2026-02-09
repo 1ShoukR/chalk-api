@@ -30,13 +30,23 @@ type Environment struct {
 	JWTExpirationHours int    `env:"JWT_EXPIRATION_HOURS,default=24"`
 
 	// OAuth (you'll configure these later)
-	GoogleClientID      string `env:"GOOGLE_CLIENT_ID"`
-	GoogleClientSecret  string `env:"GOOGLE_CLIENT_SECRET"`
-	FacebookClientID    string `env:"FACEBOOK_CLIENT_ID"`
+	GoogleClientID       string `env:"GOOGLE_CLIENT_ID"`
+	GoogleClientSecret   string `env:"GOOGLE_CLIENT_SECRET"`
+	FacebookClientID     string `env:"FACEBOOK_CLIENT_ID"`
 	FacebookClientSecret string `env:"FACEBOOK_CLIENT_SECRET"`
-	AppleClientID       string `env:"APPLE_CLIENT_ID"`
-	AppleTeamID         string `env:"APPLE_TEAM_ID"`
-	AppleKeyID          string `env:"APPLE_KEY_ID"`
+	AppleClientID        string `env:"APPLE_CLIENT_ID"`
+	AppleTeamID          string `env:"APPLE_TEAM_ID"`
+	AppleKeyID           string `env:"APPLE_KEY_ID"`
+
+	// RevenueCat (subscription management)
+	RevenueCatAPIKey       string `env:"REVENUECAT_API_KEY"`
+	RevenueCatWebhookSecret string `env:"REVENUECAT_WEBHOOK_SECRET"`
+
+	// Expo Push Notifications
+	ExpoAccessToken string `env:"EXPO_ACCESS_TOKEN"`
+
+	// Open Food Facts (no auth required, but we track user-agent)
+	OpenFoodFactsUserAgent string `env:"OPENFOODFACTS_USER_AGENT,default=ChalkAPI/1.0"`
 }
 
 var DeployVersion = "dev"
