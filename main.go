@@ -3,11 +3,13 @@ package main
 import (
 	"chalk-api/pkg/config"
 	"chalk-api/pkg/db"
+	"chalk-api/pkg/external"
 	"chalk-api/pkg/handlers"
 	"chalk-api/pkg/middleware"
 	"chalk-api/pkg/repositories"
 	"chalk-api/pkg/server"
 	"chalk-api/pkg/services"
+	"chalk-api/pkg/workers"
 	"fmt"
 	"log/slog"
 	"os"
@@ -48,12 +50,24 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Initialize external integrations
+	externalCollection := external.Initialize(cfg)
+
 	// Initialize Services
 	servicesCollection, err := services.InitializeServices(repositoriesCollection, cfg)
 	if err != nil {
 		slog.Error("Failed to initialize services", "err", err)
 		os.Exit(1)
 	}
+
+	// Initialize Workers (outbox processor, background tasks)
+	workersCollection, err := workers.InitializeWorkers(cfg, repositoriesCollection, externalCollection)
+	if err != nil {
+		slog.Error("Failed to initialize workers", "error", err)
+		os.Exit(1)
+	}
+	workersCollection.StartAll(cfg)
+	defer workersCollection.StopAll()
 
 	// Initialize Handlers
 	handlersCollection, err := handlers.InitializeHandlers(servicesCollection, repositoriesCollection, cfg)
@@ -82,11 +96,13 @@ func main() {
 	select {
 	case <-sigChan:
 		slog.Info("Received shutdown signal")
+		workersCollection.StopAll()
 		if err := s.Shutdown(); err != nil {
 			slog.Error("Failed to shutdown server", "error", err)
 		}
 	case err := <-errChan:
 		slog.Error("Server error", "error", err)
+		workersCollection.StopAll()
 		os.Exit(1)
 	}
 

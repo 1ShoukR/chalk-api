@@ -15,6 +15,7 @@ type RepositoriesCollection struct {
 	Nutrition    *NutritionRepository
 	Progress     *ProgressRepository
 	Message      *MessageRepository
+	Outbox       *OutboxRepository
 }
 
 func InitializeRepositories(db *gorm.DB) (*RepositoriesCollection, error) {
@@ -31,5 +32,6 @@ func InitializeRepositories(db *gorm.DB) (*RepositoriesCollection, error) {
 		Nutrition:    NewNutritionRepository(db),
 		Progress:     NewProgressRepository(db),
 		Message:      NewMessageRepository(db),
+		Outbox:       NewOutboxRepository(db),
 	}, nil
 }

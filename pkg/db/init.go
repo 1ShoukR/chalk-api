@@ -124,6 +124,8 @@ func RunMigrations(db *gorm.DB) error {
 		// Messaging models
 		&models.Conversation{},
 		&models.Message{},
+		// Event outbox models
+		&models.OutboxEvent{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)
@@ -170,6 +172,15 @@ func RunMigrations(db *gorm.DB) error {
 		ON conversations(coach_id, client_id)
 	`).Error; err != nil {
 		return fmt.Errorf("failed to create conversation index: %w", err)
+	}
+
+	// Outbox processing indexes for worker polling and crash recovery
+	if err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_outbox_pending_available ON outbox_events(status, available_at)`).Error; err != nil {
+		return fmt.Errorf("failed to create outbox pending index: %w", err)
+	}
+
+	if err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_outbox_processing_started_partial ON outbox_events(processing_started) WHERE status = 'processing'`).Error; err != nil {
+		return fmt.Errorf("failed to create outbox processing index: %w", err)
 	}
 
 	slog.Info("Database migrations completed")

@@ -39,7 +39,7 @@ type Environment struct {
 	AppleKeyID           string `env:"APPLE_KEY_ID"`
 
 	// RevenueCat (subscription management)
-	RevenueCatAPIKey       string `env:"REVENUECAT_API_KEY"`
+	RevenueCatAPIKey        string `env:"REVENUECAT_API_KEY"`
 	RevenueCatWebhookSecret string `env:"REVENUECAT_WEBHOOK_SECRET"`
 
 	// Expo Push Notifications
@@ -47,6 +47,12 @@ type Environment struct {
 
 	// Open Food Facts (no auth required, but we track user-agent)
 	OpenFoodFactsUserAgent string `env:"OPENFOODFACTS_USER_AGENT,default=ChalkAPI/1.0"`
+
+	// Outbox worker tuning
+	OutboxPollIntervalSeconds   int `env:"OUTBOX_POLL_INTERVAL_SECONDS,default=2"`
+	OutboxBatchSize             int `env:"OUTBOX_BATCH_SIZE,default=25"`
+	OutboxMaxAttempts           int `env:"OUTBOX_MAX_ATTEMPTS,default=8"`
+	OutboxStuckThresholdSeconds int `env:"OUTBOX_STUCK_THRESHOLD_SECONDS,default=600"`
 }
 
 var DeployVersion = "dev"
