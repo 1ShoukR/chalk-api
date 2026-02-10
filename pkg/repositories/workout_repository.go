@@ -74,6 +74,31 @@ func (r *WorkoutRepository) ListByClient(ctx context.Context, clientID uint, lim
 	return workouts, total, err
 }
 
+func (r *WorkoutRepository) ListByClients(ctx context.Context, clientIDs []uint, limit, offset int) ([]models.Workout, int64, error) {
+	var workouts []models.Workout
+	var total int64
+
+	if len(clientIDs) == 0 {
+		return workouts, 0, nil
+	}
+
+	query := r.db.WithContext(ctx).Where("client_id IN ?", clientIDs)
+
+	if err := query.Model(&models.Workout{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := query.
+		Preload("Exercises", func(db *gorm.DB) *gorm.DB {
+			return db.Order("order_index ASC")
+		}).
+		Order("scheduled_date DESC NULLS LAST, created_at DESC").
+		Limit(limit).Offset(offset).
+		Find(&workouts).Error
+
+	return workouts, total, err
+}
+
 func (r *WorkoutRepository) Update(ctx context.Context, workout *models.Workout) error {
 	return r.db.WithContext(ctx).Save(workout).Error
 }
@@ -132,6 +157,17 @@ func (r *WorkoutRepository) SkipExercise(ctx context.Context, id uint, reason st
 		}).Error
 }
 
+func (r *WorkoutRepository) GetExerciseByID(ctx context.Context, id uint) (*models.WorkoutExercise, error) {
+	var exercise models.WorkoutExercise
+	err := r.db.WithContext(ctx).
+		Preload("Workout").
+		First(&exercise, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &exercise, nil
+}
+
 // --- Workout Logs ---
 
 func (r *WorkoutRepository) CreateLog(ctx context.Context, log *models.WorkoutLog) error {
@@ -140,6 +176,17 @@ func (r *WorkoutRepository) CreateLog(ctx context.Context, log *models.WorkoutLo
 
 func (r *WorkoutRepository) UpdateLog(ctx context.Context, log *models.WorkoutLog) error {
 	return r.db.WithContext(ctx).Save(log).Error
+}
+
+func (r *WorkoutRepository) GetLogByID(ctx context.Context, id uint) (*models.WorkoutLog, error) {
+	var log models.WorkoutLog
+	err := r.db.WithContext(ctx).
+		Preload("WorkoutExercise").
+		First(&log, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &log, nil
 }
 
 func (r *WorkoutRepository) ListLogsByExercise(ctx context.Context, workoutExerciseID uint) ([]models.WorkoutLog, error) {

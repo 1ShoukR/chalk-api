@@ -56,6 +56,26 @@ func SetupRouter(h *handlers.HandlersCollection, cfg config.Environment) *gin.En
 				coaches.POST("/invite-codes", h.Coach.CreateInviteCode)
 				coaches.GET("/invite-codes", h.Coach.ListInviteCodes)
 				coaches.PATCH("/invite-codes/:id/deactivate", h.Coach.DeactivateInviteCode)
+
+				coaches.POST("/templates", h.Workout.CreateTemplate)
+				coaches.GET("/templates", h.Workout.ListMyTemplates)
+				coaches.GET("/templates/:id", h.Workout.GetMyTemplate)
+				coaches.PATCH("/templates/:id", h.Workout.UpdateMyTemplate)
+
+				coaches.POST("/workouts/assign", h.Workout.AssignWorkout)
+			}
+
+			workouts := protected.Group("/workouts")
+			{
+				workouts.GET("/me", h.Workout.ListMyWorkouts)
+				workouts.GET("/me/:id", h.Workout.GetMyWorkout)
+				workouts.POST("/me/:id/start", h.Workout.StartMyWorkout)
+				workouts.POST("/me/:id/complete", h.Workout.CompleteMyWorkout)
+
+				workouts.POST("/exercises/:id/complete", h.Workout.MarkExerciseCompleted)
+				workouts.POST("/exercises/:id/skip", h.Workout.SkipExercise)
+				workouts.POST("/exercises/:id/logs", h.Workout.CreateExerciseLog)
+				workouts.PATCH("/logs/:id", h.Workout.UpdateWorkoutLog)
 			}
 		}
 	}

@@ -91,3 +91,22 @@ func (r *TemplateRepository) ReorderExercises(ctx context.Context, templateID ui
 		return nil
 	})
 }
+
+// ReplaceExercises replaces all template exercises in a single transaction.
+func (r *TemplateRepository) ReplaceExercises(ctx context.Context, templateID uint, exercises []models.WorkoutTemplateExercise) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("template_id = ?", templateID).Delete(&models.WorkoutTemplateExercise{}).Error; err != nil {
+			return err
+		}
+
+		if len(exercises) == 0 {
+			return nil
+		}
+
+		for i := range exercises {
+			exercises[i].TemplateID = templateID
+		}
+
+		return tx.Create(&exercises).Error
+	})
+}

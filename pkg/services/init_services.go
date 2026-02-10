@@ -11,17 +11,19 @@ func InitializeServices(repos *repositories.RepositoriesCollection, cfg config.E
 	eventsPublisher := events.NewPublisher(repos.Outbox)
 
 	return &ServicesCollection{
-		Events: eventsPublisher,
-		Auth:   NewAuthService(repos.User, repos.Auth, cfg.JWTSecret, cfg.JWTExpirationHours),
-		User:   NewUserService(repos.User),
-		Coach:  NewCoachService(repos.Coach, repos.Client, eventsPublisher),
+		Events:  eventsPublisher,
+		Auth:    NewAuthService(repos.User, repos.Auth, cfg.JWTSecret, cfg.JWTExpirationHours),
+		User:    NewUserService(repos.User),
+		Coach:   NewCoachService(repos.Coach, repos.Client, eventsPublisher),
+		Workout: NewWorkoutService(repos.Template, repos.Workout, repos.Coach, repos.Client, eventsPublisher),
 	}, nil
 }
 
 // ServicesCollection contains all the services
 type ServicesCollection struct {
-	Events *events.Publisher
-	Auth   *AuthService
-	User   *UserService
-	Coach  *CoachService
+	Events  *events.Publisher
+	Auth    *AuthService
+	User    *UserService
+	Coach   *CoachService
+	Workout *WorkoutService
 }

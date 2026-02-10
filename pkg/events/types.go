@@ -11,6 +11,7 @@ type EventType string
 const (
 	EventTypeMessageSent         EventType = "message.sent"
 	EventTypeWorkoutAssigned     EventType = "workout.assigned"
+	EventTypeWorkoutCompleted    EventType = "workout.completed"
 	EventTypeSessionBooked       EventType = "session.booked"
 	EventTypeInviteAccepted      EventType = "invite.accepted"
 	EventTypeSubscriptionChanged EventType = "subscription.changed"
@@ -31,6 +32,13 @@ type WorkoutAssignedPayload struct {
 	ScheduledDate  string `json:"scheduled_date"`
 	WorkoutName    string `json:"workout_name"`
 	AssignedByUser uint   `json:"assigned_by_user"`
+}
+
+type WorkoutCompletedPayload struct {
+	WorkoutID   uint      `json:"workout_id"`
+	CoachID     uint      `json:"coach_id"`
+	ClientID    uint      `json:"client_id"`
+	CompletedAt time.Time `json:"completed_at"`
 }
 
 type SessionBookedPayload struct {

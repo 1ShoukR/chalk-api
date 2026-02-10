@@ -26,6 +26,9 @@ func RegisterDefaultHandlers(dispatcher *Dispatcher, integrations *external.Coll
 	if err := dispatcher.Register(EventTypeWorkoutAssigned, NewLoggingHandler("workout.assigned")); err != nil {
 		return err
 	}
+	if err := dispatcher.Register(EventTypeWorkoutCompleted, NewLoggingHandler("workout.completed")); err != nil {
+		return err
+	}
 	if err := dispatcher.Register(EventTypeSessionBooked, NewLoggingHandler("session.booked")); err != nil {
 		return err
 	}
