@@ -9,21 +9,23 @@ import (
 // InitializeHandlers initializes all the handlers
 func InitializeHandlers(services *services.ServicesCollection, repos *repositories.RepositoriesCollection, cfg config.Environment) (*HandlersCollection, error) {
 	return &HandlersCollection{
-		Auth:    NewAuthHandler(services.Auth),
-		User:    NewUserHandler(services.User),
-		Coach:   NewCoachHandler(services.Coach),
-		Invite:  NewInviteHandler(services.Coach),
-		Workout: NewWorkoutHandler(services.Workout),
-		Message: NewMessageHandler(services.Message),
+		Auth:         NewAuthHandler(services.Auth),
+		User:         NewUserHandler(services.User),
+		Coach:        NewCoachHandler(services.Coach),
+		Invite:       NewInviteHandler(services.Coach),
+		Workout:      NewWorkoutHandler(services.Workout),
+		Message:      NewMessageHandler(services.Message),
+		Subscription: NewSubscriptionHandler(services.Subscription),
 	}, nil
 }
 
 // HandlersCollection contains all the handlers
 type HandlersCollection struct {
-	Auth    *AuthHandler
-	User    *UserHandler
-	Coach   *CoachHandler
-	Invite  *InviteHandler
-	Workout *WorkoutHandler
-	Message *MessageHandler
+	Auth         *AuthHandler
+	User         *UserHandler
+	Coach        *CoachHandler
+	Invite       *InviteHandler
+	Workout      *WorkoutHandler
+	Message      *MessageHandler
+	Subscription *SubscriptionHandler
 }

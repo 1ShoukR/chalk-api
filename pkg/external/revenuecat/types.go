@@ -10,14 +10,14 @@ type SubscriberResponse struct {
 
 // Subscriber represents a RevenueCat subscriber
 type Subscriber struct {
-	FirstSeen           time.Time              `json:"first_seen"`
-	LastSeen            time.Time              `json:"last_seen"`
-	ManagementURL       string                 `json:"management_url"`
-	NonSubscriptions    map[string][]Purchase  `json:"non_subscriptions"`
-	OriginalAppUserID   string                 `json:"original_app_user_id"`
-	OriginalPurchaseDate *time.Time            `json:"original_purchase_date"`
-	Subscriptions       map[string]Subscription `json:"subscriptions"`
-	Entitlements        map[string]Entitlement  `json:"entitlements"`
+	FirstSeen            time.Time               `json:"first_seen"`
+	LastSeen             time.Time               `json:"last_seen"`
+	ManagementURL        string                  `json:"management_url"`
+	NonSubscriptions     map[string][]Purchase   `json:"non_subscriptions"`
+	OriginalAppUserID    string                  `json:"original_app_user_id"`
+	OriginalPurchaseDate *time.Time              `json:"original_purchase_date"`
+	Subscriptions        map[string]Subscription `json:"subscriptions"`
+	Entitlements         map[string]Entitlement  `json:"entitlements"`
 }
 
 // Subscription represents a subscription in RevenueCat
@@ -35,10 +35,10 @@ type Subscription struct {
 
 // Entitlement represents an entitlement (access level) in RevenueCat
 type Entitlement struct {
-	ExpiresDate          *time.Time `json:"expires_date"`
+	ExpiresDate            *time.Time `json:"expires_date"`
 	GracePeriodExpiresDate *time.Time `json:"grace_period_expires_date"`
-	ProductIdentifier    string     `json:"product_identifier"`
-	PurchaseDate         time.Time  `json:"purchase_date"`
+	ProductIdentifier      string     `json:"product_identifier"`
+	PurchaseDate           time.Time  `json:"purchase_date"`
 }
 
 // Purchase represents a non-subscription purchase
@@ -61,37 +61,40 @@ type EventPayload struct {
 	Type string `json:"type"` // See EventType constants
 
 	// User identification
-	AppUserID         string `json:"app_user_id"`
-	OriginalAppUserID string `json:"original_app_user_id"`
+	AppUserID         string   `json:"app_user_id"`
+	OriginalAppUserID string   `json:"original_app_user_id"`
+	Aliases           []string `json:"aliases"`
 
 	// Product info
-	ProductID          string  `json:"product_id"`
-	EntitlementIDs     []string `json:"entitlement_ids"`
-	PeriodType         string  `json:"period_type"` // "TRIAL", "INTRO", "NORMAL"
-	PresentedOfferingID string `json:"presented_offering_id"`
+	ProductID           string   `json:"product_id"`
+	EntitlementIDs      []string `json:"entitlement_ids"`
+	PeriodType          string   `json:"period_type"` // "TRIAL", "INTRO", "NORMAL"
+	PresentedOfferingID string   `json:"presented_offering_id"`
 
 	// Pricing
-	Price         float64 `json:"price"`
-	Currency      string  `json:"currency"`
+	Price                    float64 `json:"price"`
+	Currency                 string  `json:"currency"`
 	PriceInPurchasedCurrency float64 `json:"price_in_purchased_currency"`
 
 	// Store info
-	Store       string `json:"store"` // "APP_STORE", "PLAY_STORE", "STRIPE"
+	Store       string `json:"store"`       // "APP_STORE", "PLAY_STORE", "STRIPE"
 	Environment string `json:"environment"` // "SANDBOX", "PRODUCTION"
 
 	// Timestamps
-	EventTimestampMs      int64      `json:"event_timestamp_ms"`
-	PurchasedAtMs         int64      `json:"purchased_at_ms"`
-	ExpirationAtMs        *int64     `json:"expiration_at_ms"`
-	OriginalPurchaseDateMs int64     `json:"original_purchase_date_ms"`
+	EventTimestampMs       int64  `json:"event_timestamp_ms"`
+	PurchasedAtMs          int64  `json:"purchased_at_ms"`
+	ExpirationAtMs         *int64 `json:"expiration_at_ms"`
+	OriginalPurchaseDateMs int64  `json:"original_purchase_date_ms"`
 
 	// Cancellation
-	CancelReason          *string `json:"cancel_reason"`
-	ExpirationReason      *string `json:"expiration_reason"`
+	CancelReason     *string `json:"cancel_reason"`
+	ExpirationReason *string `json:"expiration_reason"`
 
 	// Transaction IDs
-	TransactionID         string  `json:"transaction_id"`
-	OriginalTransactionID string  `json:"original_transaction_id"`
+	TransactionID         string   `json:"transaction_id"`
+	OriginalTransactionID string   `json:"original_transaction_id"`
+	TransferredFrom       []string `json:"transferred_from"`
+	TransferredTo         []string `json:"transferred_to"`
 
 	// Subscriber attributes
 	SubscriberAttributes map[string]AttributeValue `json:"subscriber_attributes"`
@@ -105,15 +108,21 @@ type AttributeValue struct {
 
 // Event types from RevenueCat webhooks
 const (
-	EventTypeInitialPurchase       = "INITIAL_PURCHASE"
-	EventTypeRenewal               = "RENEWAL"
-	EventTypeCancellation          = "CANCELLATION"
-	EventTypeUncancellation        = "UNCANCELLATION"
-	EventTypeNonRenewingPurchase   = "NON_RENEWING_PURCHASE"
-	EventTypeSubscriptionPaused    = "SUBSCRIPTION_PAUSED"
-	EventTypeBillingIssue          = "BILLING_ISSUE"
-	EventTypeProductChange         = "PRODUCT_CHANGE"
-	EventTypeExpiration            = "EXPIRATION"
-	EventTypeSubscriptionExtended  = "SUBSCRIPTION_EXTENDED"
-	EventTypeTransfer              = "TRANSFER"
+	EventTypeTest                 = "TEST"
+	EventTypeInitialPurchase      = "INITIAL_PURCHASE"
+	EventTypeRenewal              = "RENEWAL"
+	EventTypeCancellation         = "CANCELLATION"
+	EventTypeUncancellation       = "UNCANCELLATION"
+	EventTypeNonRenewingPurchase  = "NON_RENEWING_PURCHASE"
+	EventTypeSubscriptionPaused   = "SUBSCRIPTION_PAUSED"
+	EventTypeBillingIssue         = "BILLING_ISSUE"
+	EventTypeProductChange        = "PRODUCT_CHANGE"
+	EventTypeExpiration           = "EXPIRATION"
+	EventTypeSubscriptionExtended = "SUBSCRIPTION_EXTENDED"
+	EventTypeRefundReversed       = "REFUND_REVERSED"
+	EventTypeTemporaryEntitlement = "TEMPORARY_ENTITLEMENT_GRANT"
+	EventTypeInvoiceIssuance      = "INVOICE_ISSUANCE"
+	EventTypeVirtualCurrency      = "VIRTUAL_CURRENCY_TRANSACTION"
+	EventTypeExperimentEnrollment = "EXPERIMENT_ENROLLMENT"
+	EventTypeTransfer             = "TRANSFER"
 )

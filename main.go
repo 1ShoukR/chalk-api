@@ -54,7 +54,7 @@ func main() {
 	externalCollection := external.Initialize(cfg)
 
 	// Initialize Services
-	servicesCollection, err := services.InitializeServices(repositoriesCollection, cfg)
+	servicesCollection, err := services.InitializeServices(repositoriesCollection, externalCollection, cfg)
 	if err != nil {
 		slog.Error("Failed to initialize services", "err", err)
 		os.Exit(1)

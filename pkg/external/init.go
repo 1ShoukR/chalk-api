@@ -17,9 +17,15 @@ type Collection struct {
 
 // Initialize creates all external API integrations
 func Initialize(cfg config.Environment) *Collection {
+	webhookAuthorization := cfg.RevenueCatWebhookAuthorization
+	if webhookAuthorization == "" {
+		// Backward compatibility for existing deployments that still use REVENUECAT_WEBHOOK_SECRET.
+		webhookAuthorization = cfg.RevenueCatWebhookSecret
+	}
+
 	collection := &Collection{
 		OpenFoodFacts: openfoodfacts.New(cfg.OpenFoodFactsUserAgent),
-		RevenueCat:    revenuecat.New(cfg.RevenueCatAPIKey, cfg.RevenueCatWebhookSecret),
+		RevenueCat:    revenuecat.New(cfg.RevenueCatAPIKey, webhookAuthorization),
 		Expo:          expo.New(cfg.ExpoAccessToken),
 	}
 

@@ -1,9 +1,7 @@
 package revenuecat
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -21,25 +19,25 @@ const (
 type API interface {
 	// GetSubscriber fetches subscriber info by app user ID
 	GetSubscriber(appUserID string) (*Subscriber, error)
-	// ValidateWebhook validates the webhook signature and parses the event
-	ValidateWebhook(body []byte, signature string) (*WebhookEvent, error)
+	// ValidateWebhook validates webhook authorization and parses the event
+	ValidateWebhook(body []byte, authorization string) (*WebhookEvent, error)
 }
 
 // RevenueCat implements the API interface
 type RevenueCat struct {
-	httpClient    *http.Client
-	apiKey        string
-	webhookSecret string
+	httpClient           *http.Client
+	apiKey               string
+	webhookAuthorization string
 }
 
 // New creates a new RevenueCat API instance
-func New(apiKey, webhookSecret string) *RevenueCat {
+func New(apiKey, webhookAuthorization string) *RevenueCat {
 	return &RevenueCat{
 		httpClient: &http.Client{
 			Timeout: defaultTimeout,
 		},
-		apiKey:        apiKey,
-		webhookSecret: webhookSecret,
+		apiKey:               apiKey,
+		webhookAuthorization: webhookAuthorization,
 	}
 }
 
@@ -98,21 +96,10 @@ func (r *RevenueCat) GetSubscriber(appUserID string) (*Subscriber, error) {
 	return &result.Subscriber, nil
 }
 
-// ValidateWebhook validates the webhook signature and parses the event
-// RevenueCat uses HMAC-SHA256 for webhook signatures
-func (r *RevenueCat) ValidateWebhook(body []byte, signature string) (*WebhookEvent, error) {
-	if r.webhookSecret == "" {
-		// If no secret configured, skip validation (development mode)
-		slog.Warn("RevenueCat webhook secret not configured, skipping signature validation")
-	} else {
-		// Validate HMAC signature
-		mac := hmac.New(sha256.New, []byte(r.webhookSecret))
-		mac.Write(body)
-		expectedSig := hex.EncodeToString(mac.Sum(nil))
-
-		if !hmac.Equal([]byte(signature), []byte(expectedSig)) {
-			return nil, fmt.Errorf("invalid webhook signature")
-		}
+// ValidateWebhook validates webhook authorization and parses the event.
+func (r *RevenueCat) ValidateWebhook(body []byte, authorization string) (*WebhookEvent, error) {
+	if err := r.validateWebhookAuthorization(authorization); err != nil {
+		return nil, err
 	}
 
 	var event WebhookEvent
@@ -127,6 +114,21 @@ func (r *RevenueCat) ValidateWebhook(body []byte, signature string) (*WebhookEve
 	)
 
 	return &event, nil
+}
+
+func (r *RevenueCat) validateWebhookAuthorization(authorization string) error {
+	if r.webhookAuthorization == "" {
+		// Development fallback: allow webhook processing when auth header is not configured.
+		slog.Warn("RevenueCat webhook authorization not configured, skipping header validation")
+		return nil
+	}
+	if authorization == "" {
+		return fmt.Errorf("missing webhook authorization header")
+	}
+	if subtle.ConstantTimeCompare([]byte(authorization), []byte(r.webhookAuthorization)) != 1 {
+		return fmt.Errorf("invalid webhook authorization header")
+	}
+	return nil
 }
 
 // IsActiveSubscription checks if any subscription is currently active

@@ -37,6 +37,11 @@ func SetupRouter(h *handlers.HandlersCollection, cfg config.Environment) *gin.En
 			invites.GET("/:code", h.Invite.GetPreview)
 		}
 
+		subscriptions := v1.Group("/subscriptions")
+		{
+			subscriptions.POST("/revenuecat/webhook", h.Subscription.RevenueCatWebhook)
+		}
+
 		protected := v1.Group("")
 		protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 		{
@@ -88,6 +93,9 @@ func SetupRouter(h *handlers.HandlersCollection, cfg config.Environment) *gin.En
 				messages.POST("/conversations/:id/read", h.Message.MarkAsRead)
 				messages.GET("/unread-count", h.Message.GetUnreadCount)
 			}
+
+			protected.GET("/subscriptions/me", h.Subscription.GetMySubscription)
+			protected.GET("/features/:feature/access", h.Subscription.CheckFeatureAccess)
 		}
 	}
 

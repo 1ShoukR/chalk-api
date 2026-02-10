@@ -39,7 +39,9 @@ type Environment struct {
 	AppleKeyID           string `env:"APPLE_KEY_ID"`
 
 	// RevenueCat (subscription management)
-	RevenueCatAPIKey        string `env:"REVENUECAT_API_KEY"`
+	RevenueCatAPIKey               string `env:"REVENUECAT_API_KEY"`
+	RevenueCatWebhookAuthorization string `env:"REVENUECAT_WEBHOOK_AUTHORIZATION"`
+	// Deprecated fallback for older env naming.
 	RevenueCatWebhookSecret string `env:"REVENUECAT_WEBHOOK_SECRET"`
 
 	// Expo Push Notifications
