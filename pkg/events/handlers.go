@@ -4,25 +4,39 @@ import (
 	"chalk-api/pkg/external"
 	"chalk-api/pkg/external/expo"
 	"chalk-api/pkg/models"
+	"chalk-api/pkg/repositories"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strconv"
 	"strings"
 )
 
-func RegisterDefaultHandlers(dispatcher *Dispatcher, integrations *external.Collection) error {
+func RegisterDefaultHandlers(
+	dispatcher *Dispatcher,
+	repos *repositories.RepositoriesCollection,
+	integrations *external.Collection,
+) error {
 	if integrations != nil && integrations.Expo != nil {
 		if err := dispatcher.Register(EventTypeNotificationPush, NewPushNotificationHandler(integrations.Expo)); err != nil {
 			return err
 		}
 	}
 
+	if repos != nil && repos.User != nil && repos.Outbox != nil {
+		publisher := NewPublisher(repos.Outbox)
+		if err := dispatcher.Register(EventTypeMessageSent, NewMessageSentHandler(repos.User, publisher)); err != nil {
+			return err
+		}
+	} else {
+		if err := dispatcher.Register(EventTypeMessageSent, NewLoggingHandler("message.sent")); err != nil {
+			return err
+		}
+	}
+
 	// Domain event handlers are logging placeholders for now.
 	// These are ready to be upgraded into real side-effect handlers as services are implemented.
-	if err := dispatcher.Register(EventTypeMessageSent, NewLoggingHandler("message.sent")); err != nil {
-		return err
-	}
 	if err := dispatcher.Register(EventTypeWorkoutAssigned, NewLoggingHandler("workout.assigned")); err != nil {
 		return err
 	}
@@ -37,6 +51,75 @@ func RegisterDefaultHandlers(dispatcher *Dispatcher, integrations *external.Coll
 	}
 	if err := dispatcher.Register(EventTypeSubscriptionChanged, NewLoggingHandler("subscription.changed")); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+type MessageSentHandler struct {
+	userRepo  *repositories.UserRepository
+	publisher *Publisher
+}
+
+func NewMessageSentHandler(userRepo *repositories.UserRepository, publisher *Publisher) *MessageSentHandler {
+	return &MessageSentHandler{
+		userRepo:  userRepo,
+		publisher: publisher,
+	}
+}
+
+func (h *MessageSentHandler) Handle(ctx context.Context, event models.OutboxEvent) error {
+	var payload MessageSentPayload
+	if err := json.Unmarshal([]byte(event.Payload), &payload); err != nil {
+		return Permanent(fmt.Errorf("decode message.sent payload: %w", err))
+	}
+	if payload.MessageID == 0 {
+		return Permanent(fmt.Errorf("message.sent payload missing message_id"))
+	}
+	if payload.RecipientID == 0 {
+		return Permanent(fmt.Errorf("message.sent payload missing recipient_id"))
+	}
+
+	deviceTokens, err := h.userRepo.GetDeviceTokens(ctx, payload.RecipientID)
+	if err != nil {
+		return fmt.Errorf("get device tokens: %w", err)
+	}
+	if len(deviceTokens) == 0 {
+		return nil
+	}
+
+	expoTokens := make([]string, 0, len(deviceTokens))
+	for _, token := range deviceTokens {
+		expoTokens = append(expoTokens, token.Token)
+	}
+
+	body := "You have a new message"
+	if payload.ContentPreview != nil {
+		body = *payload.ContentPreview
+	}
+
+	pushPayload := PushNotificationPayload{
+		Tokens: expoTokens,
+		Title:  "New message",
+		Body:   body,
+		Data: map[string]any{
+			"type":            "message",
+			"conversation_id": payload.ConversationID,
+			"message_id":      payload.MessageID,
+			"sender_id":       payload.SenderID,
+		},
+	}
+
+	messageID := strconv.FormatUint(uint64(payload.MessageID), 10)
+	if err := h.publisher.Publish(
+		ctx,
+		EventTypeNotificationPush,
+		"message",
+		messageID,
+		BuildIdempotencyKey(EventTypeNotificationPush, "message", messageID),
+		pushPayload,
+	); err != nil {
+		return fmt.Errorf("enqueue notification.push: %w", err)
 	}
 
 	return nil

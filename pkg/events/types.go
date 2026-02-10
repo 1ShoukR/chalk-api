@@ -19,10 +19,11 @@ const (
 )
 
 type MessageSentPayload struct {
-	MessageID      uint `json:"message_id"`
-	ConversationID uint `json:"conversation_id"`
-	SenderID       uint `json:"sender_id"`
-	RecipientID    uint `json:"recipient_id"`
+	MessageID      uint    `json:"message_id"`
+	ConversationID uint    `json:"conversation_id"`
+	SenderID       uint    `json:"sender_id"`
+	RecipientID    uint    `json:"recipient_id"`
+	ContentPreview *string `json:"content_preview,omitempty"`
 }
 
 type WorkoutAssignedPayload struct {

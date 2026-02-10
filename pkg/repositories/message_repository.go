@@ -71,13 +71,19 @@ func (r *MessageRepository) GetConversation(ctx context.Context, id uint) (*mode
 // CreateMessage creates a message and updates the conversation's last_message_at in one transaction
 func (r *MessageRepository) CreateMessage(ctx context.Context, message *models.Message) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(message).Error; err != nil {
-			return err
-		}
-		return tx.Model(&models.Conversation{}).
-			Where("id = ?", message.ConversationID).
-			Update("last_message_at", message.CreatedAt).Error
+		return r.CreateMessageTx(ctx, tx, message)
 	})
+}
+
+// CreateMessageTx creates a message and updates conversation last_message_at within an existing transaction.
+func (r *MessageRepository) CreateMessageTx(ctx context.Context, tx *gorm.DB, message *models.Message) error {
+	if err := tx.WithContext(ctx).Create(message).Error; err != nil {
+		return err
+	}
+	return tx.WithContext(ctx).
+		Model(&models.Conversation{}).
+		Where("id = ?", message.ConversationID).
+		Update("last_message_at", message.CreatedAt).Error
 }
 
 func (r *MessageRepository) ListMessages(ctx context.Context, conversationID uint, limit, offset int) ([]models.Message, int64, error) {

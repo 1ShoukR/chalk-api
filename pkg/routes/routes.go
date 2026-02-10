@@ -77,6 +77,17 @@ func SetupRouter(h *handlers.HandlersCollection, cfg config.Environment) *gin.En
 				workouts.POST("/exercises/:id/logs", h.Workout.CreateExerciseLog)
 				workouts.PATCH("/logs/:id", h.Workout.UpdateWorkoutLog)
 			}
+
+			messages := protected.Group("/messages")
+			{
+				messages.GET("/conversations", h.Message.ListConversations)
+				messages.POST("/conversations", h.Message.GetOrCreateConversation)
+				messages.GET("/conversations/:id", h.Message.GetConversation)
+				messages.GET("/conversations/:id/messages", h.Message.ListMessages)
+				messages.POST("/conversations/:id/messages", h.Message.SendMessage)
+				messages.POST("/conversations/:id/read", h.Message.MarkAsRead)
+				messages.GET("/unread-count", h.Message.GetUnreadCount)
+			}
 		}
 	}
 

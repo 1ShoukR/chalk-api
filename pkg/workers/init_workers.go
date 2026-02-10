@@ -21,7 +21,7 @@ func InitializeWorkers(
 	integrations *external.Collection,
 ) (*WorkersCollection, error) {
 	dispatcher := events.NewDispatcher()
-	if err := events.RegisterDefaultHandlers(dispatcher, integrations); err != nil {
+	if err := events.RegisterDefaultHandlers(dispatcher, repos, integrations); err != nil {
 		return nil, err
 	}
 

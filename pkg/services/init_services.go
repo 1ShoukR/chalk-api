@@ -16,6 +16,7 @@ func InitializeServices(repos *repositories.RepositoriesCollection, cfg config.E
 		User:    NewUserService(repos.User),
 		Coach:   NewCoachService(repos, eventsPublisher),
 		Workout: NewWorkoutService(repos, eventsPublisher),
+		Message: NewMessageService(repos, eventsPublisher),
 	}, nil
 }
 
@@ -26,4 +27,5 @@ type ServicesCollection struct {
 	User    *UserService
 	Coach   *CoachService
 	Workout *WorkoutService
+	Message *MessageService
 }
