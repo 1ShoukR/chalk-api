@@ -3,6 +3,7 @@ package routes
 import (
 	"chalk-api/pkg/config"
 	"chalk-api/pkg/handlers"
+	"chalk-api/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,14 +24,24 @@ func SetupRouter(h *handlers.HandlersCollection, cfg config.Environment) *gin.En
 	// API v1 routes
 	v1 := router.Group("/api/v1")
 	{
-		// Add your route groups here
-		// Example:
-		// users := v1.Group("/users")
-		// {
-		// 	users.GET("", h.UserHandler.GetUsers)
-		// 	users.POST("", h.UserHandler.CreateUser)
-		// }
-		_ = v1 // Remove this line when you add routes
+		auth := v1.Group("/auth")
+		{
+			auth.POST("/register", h.Auth.Register)
+			auth.POST("/login", h.Auth.Login)
+			auth.POST("/refresh", h.Auth.Refresh)
+		}
+
+		protected := v1.Group("")
+		protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
+		{
+			protected.POST("/auth/logout", h.Auth.Logout)
+
+			users := protected.Group("/users")
+			{
+				users.GET("/me", h.User.GetMe)
+				users.PATCH("/me", h.User.UpdateMe)
+			}
+		}
 	}
 
 	return router

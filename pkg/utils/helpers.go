@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"regexp"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 // GenerateRandomString generates a random hex string of given length
@@ -49,4 +51,34 @@ func IntPtr(i int) *int {
 // BoolPtr returns a pointer to a bool
 func BoolPtr(b bool) *bool {
 	return &b
+}
+
+// GetUserIDFromContext reads user_id from Gin context and converts it to uint.
+func GetUserIDFromContext(c *gin.Context) (uint, bool) {
+	value, exists := c.Get("user_id")
+	if !exists {
+		return 0, false
+	}
+
+	switch v := value.(type) {
+	case uint:
+		return v, true
+	case int:
+		if v < 0 {
+			return 0, false
+		}
+		return uint(v), true
+	case int64:
+		if v < 0 {
+			return 0, false
+		}
+		return uint(v), true
+	case float64:
+		if v < 0 {
+			return 0, false
+		}
+		return uint(v), true
+	default:
+		return 0, false
+	}
 }

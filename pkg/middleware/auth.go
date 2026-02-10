@@ -1,18 +1,40 @@
 package middleware
 
 import (
+	"chalk-api/pkg/services"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-// AuthMiddleware is a placeholder for authentication middleware
-func AuthMiddleware() gin.HandlerFunc {
+// AuthMiddleware validates Bearer JWT tokens and sets user_id in request context.
+func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// TODO: Implement authentication logic
-		// Example: Check for valid JWT token, API key, etc.
+		if strings.TrimSpace(jwtSecret) == "" {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "JWT secret is not configured"})
+			return
+		}
 
-		// For now, just pass through
+		authHeader := strings.TrimSpace(c.GetHeader("Authorization"))
+		if authHeader == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "authorization header is required"})
+			return
+		}
+
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization header format"})
+			return
+		}
+
+		userID, err := services.ValidateAccessToken(parts[1], jwtSecret)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired access token"})
+			return
+		}
+
+		c.Set("user_id", userID)
 		c.Next()
 	}
 }

@@ -10,10 +10,14 @@ import (
 func InitializeServices(repos *repositories.RepositoriesCollection, cfg config.Environment) (*ServicesCollection, error) {
 	return &ServicesCollection{
 		Events: events.NewPublisher(repos.Outbox),
+		Auth:   NewAuthService(repos.User, repos.Auth, cfg.JWTSecret, cfg.JWTExpirationHours),
+		User:   NewUserService(repos.User),
 	}, nil
 }
 
 // ServicesCollection contains all the services
 type ServicesCollection struct {
 	Events *events.Publisher
+	Auth   *AuthService
+	User   *UserService
 }
