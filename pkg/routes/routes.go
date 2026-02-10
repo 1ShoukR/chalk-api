@@ -31,15 +31,31 @@ func SetupRouter(h *handlers.HandlersCollection, cfg config.Environment) *gin.En
 			auth.POST("/refresh", h.Auth.Refresh)
 		}
 
+		// Public invite preview endpoint for deep links before authentication.
+		invites := v1.Group("/invites")
+		{
+			invites.GET("/:code", h.Invite.GetPreview)
+		}
+
 		protected := v1.Group("")
 		protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 		{
 			protected.POST("/auth/logout", h.Auth.Logout)
+			protected.POST("/invites/accept", h.Invite.Accept)
 
 			users := protected.Group("/users")
 			{
 				users.GET("/me", h.User.GetMe)
 				users.PATCH("/me", h.User.UpdateMe)
+			}
+
+			coaches := protected.Group("/coaches")
+			{
+				coaches.GET("/me", h.Coach.GetMyProfile)
+				coaches.PUT("/me", h.Coach.UpsertMyProfile)
+				coaches.POST("/invite-codes", h.Coach.CreateInviteCode)
+				coaches.GET("/invite-codes", h.Coach.ListInviteCodes)
+				coaches.PATCH("/invite-codes/:id/deactivate", h.Coach.DeactivateInviteCode)
 			}
 		}
 	}

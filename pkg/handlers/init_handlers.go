@@ -9,13 +9,17 @@ import (
 // InitializeHandlers initializes all the handlers
 func InitializeHandlers(services *services.ServicesCollection, repos *repositories.RepositoriesCollection, cfg config.Environment) (*HandlersCollection, error) {
 	return &HandlersCollection{
-		Auth: NewAuthHandler(services.Auth),
-		User: NewUserHandler(services.User),
+		Auth:   NewAuthHandler(services.Auth),
+		User:   NewUserHandler(services.User),
+		Coach:  NewCoachHandler(services.Coach),
+		Invite: NewInviteHandler(services.Coach),
 	}, nil
 }
 
 // HandlersCollection contains all the handlers
 type HandlersCollection struct {
-	Auth *AuthHandler
-	User *UserHandler
+	Auth   *AuthHandler
+	User   *UserHandler
+	Coach  *CoachHandler
+	Invite *InviteHandler
 }
