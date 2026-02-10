@@ -14,8 +14,8 @@ func InitializeServices(repos *repositories.RepositoriesCollection, cfg config.E
 		Events:  eventsPublisher,
 		Auth:    NewAuthService(repos.User, repos.Auth, cfg.JWTSecret, cfg.JWTExpirationHours),
 		User:    NewUserService(repos.User),
-		Coach:   NewCoachService(repos.Coach, repos.Client, eventsPublisher),
-		Workout: NewWorkoutService(repos.Template, repos.Workout, repos.Coach, repos.Client, eventsPublisher),
+		Coach:   NewCoachService(repos, eventsPublisher),
+		Workout: NewWorkoutService(repos, eventsPublisher),
 	}, nil
 }
 

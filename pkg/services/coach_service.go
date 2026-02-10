@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"strconv"
 	"strings"
 	"time"
@@ -59,19 +58,20 @@ type AcceptInviteResult struct {
 }
 
 type CoachService struct {
+	repos           *repositories.RepositoriesCollection
 	coachRepo       *repositories.CoachRepository
 	clientRepo      *repositories.ClientRepository
 	eventsPublisher *events.Publisher
 }
 
 func NewCoachService(
-	coachRepo *repositories.CoachRepository,
-	clientRepo *repositories.ClientRepository,
+	repos *repositories.RepositoriesCollection,
 	eventsPublisher *events.Publisher,
 ) *CoachService {
 	return &CoachService{
-		coachRepo:       coachRepo,
-		clientRepo:      clientRepo,
+		repos:           repos,
+		coachRepo:       repos.Coach,
+		clientRepo:      repos.Client,
 		eventsPublisher: eventsPublisher,
 	}
 }
@@ -248,51 +248,68 @@ func (s *CoachService) AcceptInvite(ctx context.Context, userID uint, input Acce
 		return nil, ErrInviteCodeNotFound
 	}
 
-	invite, err := s.clientRepo.GetInviteCode(ctx, code)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrInviteCodeNotFound
+	var result *AcceptInviteResult
+
+	err := s.repos.WithTransaction(ctx, func(tx *gorm.DB, txRepos *repositories.RepositoriesCollection) error {
+		invite, err := txRepos.Client.GetInviteCode(ctx, code)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrInviteCodeNotFound
+			}
+			return err
 		}
+
+		clientProfile, alreadyConnected, err := txRepos.Client.AcceptInvite(ctx, invite, userID)
+		if err != nil {
+			return err
+		}
+
+		if !alreadyConnected {
+			if err := txRepos.Coach.IncrementStat(ctx, invite.CoachID, "active_clients", 1); err != nil {
+				return err
+			}
+			if err := txRepos.Coach.IncrementStat(ctx, invite.CoachID, "total_clients_all_time", 1); err != nil {
+				return err
+			}
+		}
+
+		if s.eventsPublisher != nil {
+			payload := events.InviteAcceptedPayload{
+				InviteCodeID:    invite.ID,
+				CoachID:         invite.CoachID,
+				ClientUserID:    userID,
+				ClientProfileID: clientProfile.ID,
+				Code:            invite.Code,
+			}
+			idempotencyKey := events.BuildIdempotencyKey(
+				events.EventTypeInviteAccepted,
+				strconv.FormatUint(uint64(invite.ID), 10),
+				strconv.FormatUint(uint64(userID), 10),
+			)
+			if err := s.eventsPublisher.PublishInTx(
+				ctx,
+				tx,
+				events.EventTypeInviteAccepted,
+				"client_profile",
+				strconv.FormatUint(uint64(clientProfile.ID), 10),
+				idempotencyKey,
+				payload,
+			); err != nil {
+				return err
+			}
+		}
+
+		result = &AcceptInviteResult{
+			ClientProfile:    clientProfile,
+			AlreadyConnected: alreadyConnected,
+		}
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	clientProfile, alreadyConnected, err := s.clientRepo.AcceptInvite(ctx, invite, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	if !alreadyConnected {
-		if err := s.coachRepo.IncrementStat(ctx, invite.CoachID, "active_clients", 1); err != nil {
-			return nil, err
-		}
-		if err := s.coachRepo.IncrementStat(ctx, invite.CoachID, "total_clients_all_time", 1); err != nil {
-			return nil, err
-		}
-	}
-
-	if s.eventsPublisher != nil {
-		payload := events.InviteAcceptedPayload{
-			InviteCodeID:    invite.ID,
-			CoachID:         invite.CoachID,
-			ClientUserID:    userID,
-			ClientProfileID: clientProfile.ID,
-			Code:            invite.Code,
-		}
-		idempotencyKey := events.BuildIdempotencyKey(
-			events.EventTypeInviteAccepted,
-			strconv.FormatUint(uint64(invite.ID), 10),
-			strconv.FormatUint(uint64(userID), 10),
-		)
-		if err := s.eventsPublisher.Publish(ctx, events.EventTypeInviteAccepted, "client_profile", strconv.FormatUint(uint64(clientProfile.ID), 10), idempotencyKey, payload); err != nil {
-			// Side-effect failure should not roll back the accepted invite.
-			slog.Warn("Failed to enqueue invite.accepted event", "error", err, "invite_id", invite.ID, "client_profile_id", clientProfile.ID)
-		}
-	}
-
-	return &AcceptInviteResult{
-		ClientProfile:    clientProfile,
-		AlreadyConnected: alreadyConnected,
-	}, nil
+	return result, nil
 }
 
 func applyCoachProfileUpdates(profile *models.CoachProfile, input UpsertCoachProfileInput) {

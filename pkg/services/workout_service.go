@@ -6,7 +6,6 @@ import (
 	"chalk-api/pkg/repositories"
 	"context"
 	"errors"
-	"log/slog"
 	"strconv"
 	"strings"
 	"time"
@@ -98,6 +97,7 @@ type UpdateWorkoutLogInput struct {
 }
 
 type WorkoutService struct {
+	repos        *repositories.RepositoriesCollection
 	templateRepo *repositories.TemplateRepository
 	workoutRepo  *repositories.WorkoutRepository
 	coachRepo    *repositories.CoachRepository
@@ -106,17 +106,15 @@ type WorkoutService struct {
 }
 
 func NewWorkoutService(
-	templateRepo *repositories.TemplateRepository,
-	workoutRepo *repositories.WorkoutRepository,
-	coachRepo *repositories.CoachRepository,
-	clientRepo *repositories.ClientRepository,
+	repos *repositories.RepositoriesCollection,
 	eventsPublisher *events.Publisher,
 ) *WorkoutService {
 	return &WorkoutService{
-		templateRepo: templateRepo,
-		workoutRepo:  workoutRepo,
-		coachRepo:    coachRepo,
-		clientRepo:   clientRepo,
+		repos:        repos,
+		templateRepo: repos.Template,
+		workoutRepo:  repos.Workout,
+		coachRepo:    repos.Coach,
+		clientRepo:   repos.Client,
 		events:       eventsPublisher,
 	}
 }
@@ -279,41 +277,43 @@ func (s *WorkoutService) AssignTemplateToClient(ctx context.Context, userID uint
 	}
 	workout.Exercises = buildWorkoutExercisesFromTemplate(template.Exercises)
 
-	if err := s.workoutRepo.Create(ctx, workout); err != nil {
+	if err := s.repos.WithTransaction(ctx, func(tx *gorm.DB, txRepos *repositories.RepositoriesCollection) error {
+		if err := txRepos.Workout.Create(ctx, workout); err != nil {
+			return err
+		}
+
+		if s.events != nil {
+			payload := events.WorkoutAssignedPayload{
+				WorkoutID:      workout.ID,
+				CoachID:        workout.CoachID,
+				ClientID:       workout.ClientID,
+				ScheduledDate:  safeString(workout.ScheduledDate),
+				WorkoutName:    workout.Name,
+				AssignedByUser: userID,
+			}
+			idempotencyKey := events.BuildIdempotencyKey(
+				events.EventTypeWorkoutAssigned,
+				strconv.FormatUint(uint64(workout.ID), 10),
+			)
+			if err := s.events.PublishInTx(
+				ctx,
+				tx,
+				events.EventTypeWorkoutAssigned,
+				"workout",
+				strconv.FormatUint(uint64(workout.ID), 10),
+				idempotencyKey,
+				payload,
+			); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 
-	created, err := s.workoutRepo.GetByID(ctx, workout.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	if s.events != nil {
-		payload := events.WorkoutAssignedPayload{
-			WorkoutID:      created.ID,
-			CoachID:        created.CoachID,
-			ClientID:       created.ClientID,
-			ScheduledDate:  safeString(created.ScheduledDate),
-			WorkoutName:    created.Name,
-			AssignedByUser: userID,
-		}
-		idempotencyKey := events.BuildIdempotencyKey(
-			events.EventTypeWorkoutAssigned,
-			strconv.FormatUint(uint64(created.ID), 10),
-		)
-		if err := s.events.Publish(
-			ctx,
-			events.EventTypeWorkoutAssigned,
-			"workout",
-			strconv.FormatUint(uint64(created.ID), 10),
-			idempotencyKey,
-			payload,
-		); err != nil {
-			slog.Warn("Failed to enqueue workout.assigned event", "workout_id", created.ID, "error", err)
-		}
-	}
-
-	return created, nil
+	return s.workoutRepo.GetByID(ctx, workout.ID)
 }
 
 func (s *WorkoutService) ListMyWorkouts(ctx context.Context, userID uint, limit, offset int) ([]models.Workout, int64, error) {
@@ -384,39 +384,42 @@ func (s *WorkoutService) CompleteMyWorkout(ctx context.Context, userID, workoutI
 		return nil, ErrInvalidWorkoutState
 	}
 
-	if err := s.workoutRepo.CompleteWorkout(ctx, workoutID); err != nil {
+	completedAt := time.Now().UTC()
+	if err := s.repos.WithTransaction(ctx, func(tx *gorm.DB, txRepos *repositories.RepositoriesCollection) error {
+		if err := txRepos.Workout.CompleteWorkout(ctx, workoutID); err != nil {
+			return err
+		}
+
+		if s.events != nil {
+			payload := events.WorkoutCompletedPayload{
+				WorkoutID:   workout.ID,
+				CoachID:     workout.CoachID,
+				ClientID:    workout.ClientID,
+				CompletedAt: completedAt,
+			}
+			idempotencyKey := events.BuildIdempotencyKey(
+				events.EventTypeWorkoutCompleted,
+				strconv.FormatUint(uint64(workout.ID), 10),
+			)
+			if err := s.events.PublishInTx(
+				ctx,
+				tx,
+				events.EventTypeWorkoutCompleted,
+				"workout",
+				strconv.FormatUint(uint64(workout.ID), 10),
+				idempotencyKey,
+				payload,
+			); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 
-	updated, err := s.workoutRepo.GetByID(ctx, workoutID)
-	if err != nil {
-		return nil, err
-	}
-
-	if s.events != nil {
-		payload := events.WorkoutCompletedPayload{
-			WorkoutID:   updated.ID,
-			CoachID:     updated.CoachID,
-			ClientID:    updated.ClientID,
-			CompletedAt: time.Now().UTC(),
-		}
-		idempotencyKey := events.BuildIdempotencyKey(
-			events.EventTypeWorkoutCompleted,
-			strconv.FormatUint(uint64(updated.ID), 10),
-		)
-		if err := s.events.Publish(
-			ctx,
-			events.EventTypeWorkoutCompleted,
-			"workout",
-			strconv.FormatUint(uint64(updated.ID), 10),
-			idempotencyKey,
-			payload,
-		); err != nil {
-			slog.Warn("Failed to enqueue workout.completed event", "workout_id", updated.ID, "error", err)
-		}
-	}
-
-	return updated, nil
+	return s.workoutRepo.GetByID(ctx, workoutID)
 }
 
 func (s *WorkoutService) MarkMyExerciseCompleted(ctx context.Context, userID, workoutExerciseID uint) (*models.WorkoutExercise, error) {
