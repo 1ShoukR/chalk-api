@@ -12,6 +12,7 @@ func InitializeHandlers(services *services.ServicesCollection, repos *repositori
 		Auth:         NewAuthHandler(services.Auth),
 		User:         NewUserHandler(services.User),
 		Coach:        NewCoachHandler(services.Coach),
+		Session:      NewSessionHandler(services.Session),
 		Invite:       NewInviteHandler(services.Coach),
 		Workout:      NewWorkoutHandler(services.Workout),
 		Message:      NewMessageHandler(services.Message),
@@ -24,6 +25,7 @@ type HandlersCollection struct {
 	Auth         *AuthHandler
 	User         *UserHandler
 	Coach        *CoachHandler
+	Session      *SessionHandler
 	Invite       *InviteHandler
 	Workout      *WorkoutHandler
 	Message      *MessageHandler

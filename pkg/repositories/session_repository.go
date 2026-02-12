@@ -67,6 +67,15 @@ func (r *SessionRepository) DeleteOverride(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&models.CoachAvailabilityOverride{}, id).Error
 }
 
+func (r *SessionRepository) GetOverrideByID(ctx context.Context, id uint) (*models.CoachAvailabilityOverride, error) {
+	var override models.CoachAvailabilityOverride
+	err := r.db.WithContext(ctx).First(&override, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &override, nil
+}
+
 // --- Session Types ---
 
 func (r *SessionRepository) CreateSessionType(ctx context.Context, st *models.SessionType) error {
@@ -80,6 +89,15 @@ func (r *SessionRepository) ListSessionTypes(ctx context.Context, coachID uint) 
 		Order("name ASC").
 		Find(&types).Error
 	return types, err
+}
+
+func (r *SessionRepository) GetSessionTypeByID(ctx context.Context, id uint) (*models.SessionType, error) {
+	var sessionType models.SessionType
+	err := r.db.WithContext(ctx).First(&sessionType, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &sessionType, nil
 }
 
 func (r *SessionRepository) UpdateSessionType(ctx context.Context, st *models.SessionType) error {
@@ -102,6 +120,7 @@ func (r *SessionRepository) CreateSession(ctx context.Context, session *models.S
 func (r *SessionRepository) GetSession(ctx context.Context, id uint) (*models.Session, error) {
 	var session models.Session
 	err := r.db.WithContext(ctx).
+		Preload("Coach.User.Profile").
 		Preload("Client.User.Profile").
 		Preload("SessionType").
 		First(&session, id).Error
@@ -116,6 +135,7 @@ func (r *SessionRepository) ListSessions(ctx context.Context, coachID, clientID 
 	var sessions []models.Session
 
 	query := r.db.WithContext(ctx).
+		Preload("Coach.User.Profile").
 		Preload("Client.User.Profile").
 		Preload("SessionType").
 		Where("scheduled_at >= ? AND scheduled_at <= ?", startDate, endDate)
@@ -128,6 +148,22 @@ func (r *SessionRepository) ListSessions(ctx context.Context, coachID, clientID 
 	}
 
 	err := query.Order("scheduled_at ASC").Find(&sessions).Error
+	return sessions, err
+}
+
+func (r *SessionRepository) ListSessionsByClients(ctx context.Context, clientIDs []uint, startDate, endDate time.Time) ([]models.Session, error) {
+	if len(clientIDs) == 0 {
+		return []models.Session{}, nil
+	}
+
+	var sessions []models.Session
+	err := r.db.WithContext(ctx).
+		Preload("Coach.User.Profile").
+		Preload("Client.User.Profile").
+		Preload("SessionType").
+		Where("client_id IN ? AND scheduled_at >= ? AND scheduled_at <= ?", clientIDs, startDate, endDate).
+		Order("scheduled_at ASC").
+		Find(&sessions).Error
 	return sessions, err
 }
 
@@ -164,4 +200,27 @@ func (r *SessionRepository) MarkNoShow(ctx context.Context, id uint) error {
 		Model(&models.Session{}).
 		Where("id = ?", id).
 		Update("status", "no_show").Error
+}
+
+func (r *SessionRepository) HasCoachConflict(
+	ctx context.Context,
+	coachID uint,
+	startAt time.Time,
+	endAt time.Time,
+	excludeSessionID *uint,
+) (bool, error) {
+	query := r.db.WithContext(ctx).
+		Model(&models.Session{}).
+		Where("coach_id = ? AND status = ?", coachID, "scheduled").
+		Where("scheduled_at < ? AND (scheduled_at + (duration_minutes * INTERVAL '1 minute')) > ?", endAt, startAt)
+
+	if excludeSessionID != nil && *excludeSessionID > 0 {
+		query = query.Where("id <> ?", *excludeSessionID)
+	}
+
+	var count int64
+	if err := query.Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }

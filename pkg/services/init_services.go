@@ -24,6 +24,7 @@ func InitializeServices(
 		Auth:         NewAuthService(repos.User, repos.Auth, cfg.JWTSecret, cfg.JWTExpirationHours),
 		User:         NewUserService(repos.User),
 		Coach:        NewCoachService(repos, eventsPublisher),
+		Session:      NewSessionService(repos, eventsPublisher),
 		Workout:      NewWorkoutService(repos, eventsPublisher),
 		Message:      NewMessageService(repos, eventsPublisher),
 		Subscription: NewSubscriptionService(repos, integrations.RevenueCat),
@@ -36,6 +37,7 @@ type ServicesCollection struct {
 	Auth         *AuthService
 	User         *UserService
 	Coach        *CoachService
+	Session      *SessionService
 	Workout      *WorkoutService
 	Message      *MessageService
 	Subscription *SubscriptionService

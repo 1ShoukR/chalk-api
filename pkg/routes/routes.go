@@ -62,12 +62,24 @@ func SetupRouter(h *handlers.HandlersCollection, cfg config.Environment) *gin.En
 				coaches.GET("/invite-codes", h.Coach.ListInviteCodes)
 				coaches.PATCH("/invite-codes/:id/deactivate", h.Coach.DeactivateInviteCode)
 
+				coaches.GET("/me/availability", h.Session.GetMyAvailability)
+				coaches.PUT("/me/availability", h.Session.SetMyAvailability)
+				coaches.POST("/me/availability-overrides", h.Session.CreateAvailabilityOverride)
+				coaches.GET("/me/availability-overrides", h.Session.ListAvailabilityOverrides)
+				coaches.DELETE("/me/availability-overrides/:id", h.Session.DeleteAvailabilityOverride)
+
+				coaches.POST("/me/session-types", h.Session.CreateSessionType)
+				coaches.GET("/me/session-types", h.Session.ListSessionTypes)
+				coaches.PATCH("/me/session-types/:id", h.Session.UpdateSessionType)
+				coaches.GET("/me/sessions", h.Session.ListCoachSessions)
+
 				coaches.POST("/templates", h.Workout.CreateTemplate)
 				coaches.GET("/templates", h.Workout.ListMyTemplates)
 				coaches.GET("/templates/:id", h.Workout.GetMyTemplate)
 				coaches.PATCH("/templates/:id", h.Workout.UpdateMyTemplate)
 
 				coaches.POST("/workouts/assign", h.Workout.AssignWorkout)
+				coaches.GET("/:id/bookable-slots", h.Session.GetBookableSlots)
 			}
 
 			workouts := protected.Group("/workouts")
@@ -92,6 +104,15 @@ func SetupRouter(h *handlers.HandlersCollection, cfg config.Environment) *gin.En
 				messages.POST("/conversations/:id/messages", h.Message.SendMessage)
 				messages.POST("/conversations/:id/read", h.Message.MarkAsRead)
 				messages.GET("/unread-count", h.Message.GetUnreadCount)
+			}
+
+			sessions := protected.Group("/sessions")
+			{
+				sessions.POST("/book", h.Session.BookSession)
+				sessions.GET("/me", h.Session.ListMySessions)
+				sessions.POST("/:id/cancel", h.Session.CancelSession)
+				sessions.POST("/:id/complete", h.Session.CompleteSession)
+				sessions.POST("/:id/no-show", h.Session.MarkNoShow)
 			}
 
 			protected.GET("/subscriptions/me", h.Subscription.GetMySubscription)
