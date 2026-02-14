@@ -1,0 +1,2539 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Chalk API",
+    "version": "1.0.0",
+    "description": "MVP API contract freeze for Chalk backend."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "tags": [
+    { "name": "System" },
+    { "name": "Auth" },
+    { "name": "Users" },
+    { "name": "Coaches" },
+    { "name": "Invites" },
+    { "name": "Workouts" },
+    { "name": "Messages" },
+    { "name": "Sessions" },
+    { "name": "Subscriptions" },
+    { "name": "Features" }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Health check",
+        "operationId": "getHealth",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Service healthy",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register user",
+        "operationId": "register",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResult" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login user",
+        "operationId": "login",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged in",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResult" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh tokens",
+        "operationId": "refreshToken",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RefreshInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Refreshed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResult" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout",
+        "operationId": "logout",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LogoutInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged out",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/invites/{code}": {
+      "get": {
+        "tags": ["Invites"],
+        "summary": "Get invite preview",
+        "operationId": "getInvitePreview",
+        "security": [],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invite preview",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InvitePreview" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/invites/accept": {
+      "post": {
+        "tags": ["Invites"],
+        "summary": "Accept invite",
+        "operationId": "acceptInvite",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AcceptInviteInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Invite accepted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AcceptInviteResult" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get current user",
+        "operationId": "getMe",
+        "responses": {
+          "200": {
+            "description": "Current user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      },
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Update current user",
+        "operationId": "updateMe",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateMeInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/me": {
+      "get": {
+        "tags": ["Coaches"],
+        "summary": "Get my coach profile",
+        "operationId": "getMyCoachProfile",
+        "responses": {
+          "200": {
+            "description": "Coach profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CoachProfile" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      },
+      "put": {
+        "tags": ["Coaches"],
+        "summary": "Upsert my coach profile",
+        "operationId": "upsertMyCoachProfile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpsertCoachProfileInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Coach profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CoachProfile" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/invite-codes": {
+      "post": {
+        "tags": ["Coaches"],
+        "summary": "Create invite code",
+        "operationId": "createInviteCode",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateInviteCodeInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invite created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InviteCode" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      },
+      "get": {
+        "tags": ["Coaches"],
+        "summary": "List invite codes",
+        "operationId": "listInviteCodes",
+        "responses": {
+          "200": {
+            "description": "Invite list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/InviteCode" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/invite-codes/{id}/deactivate": {
+      "patch": {
+        "tags": ["Coaches"],
+        "summary": "Deactivate invite code",
+        "operationId": "deactivateInviteCode",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deactivated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/me/availability": {
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "Get my weekly availability",
+        "operationId": "getMyAvailability",
+        "responses": {
+          "200": {
+            "description": "Availability",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AvailabilityResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      },
+      "put": {
+        "tags": ["Sessions"],
+        "summary": "Replace my weekly availability",
+        "operationId": "setMyAvailability",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SetAvailabilityInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Availability updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AvailabilityResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/me/availability-overrides": {
+      "post": {
+        "tags": ["Sessions"],
+        "summary": "Create availability override",
+        "operationId": "createAvailabilityOverride",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateAvailabilityOverrideInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Override created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CoachAvailabilityOverride" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      },
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "List availability overrides",
+        "operationId": "listAvailabilityOverrides",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Override list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AvailabilityOverridesResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/me/availability-overrides/{id}": {
+      "delete": {
+        "tags": ["Sessions"],
+        "summary": "Delete availability override",
+        "operationId": "deleteAvailabilityOverride",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Override deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/me/session-types": {
+      "post": {
+        "tags": ["Sessions"],
+        "summary": "Create session type",
+        "operationId": "createSessionType",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateSessionTypeInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Session type created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SessionType" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      },
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "List session types",
+        "operationId": "listSessionTypes",
+        "responses": {
+          "200": {
+            "description": "Session type list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SessionTypesResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/me/session-types/{id}": {
+      "patch": {
+        "tags": ["Sessions"],
+        "summary": "Update session type",
+        "operationId": "updateSessionType",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateSessionTypeInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session type updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SessionType" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/me/sessions": {
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "List coach sessions",
+        "operationId": "listCoachSessions",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SessionsResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/{id}/bookable-slots": {
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "Get coach bookable slots",
+        "operationId": "getBookableSlots",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "session_type_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1 }
+          },
+          {
+            "name": "duration_minutes",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bookable slots",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SlotsResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/sessions/book": {
+      "post": {
+        "tags": ["Sessions"],
+        "summary": "Book session",
+        "operationId": "bookSession",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BookSessionInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Session booked",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Session" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/sessions/me": {
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "List my sessions",
+        "operationId": "listMySessions",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SessionsResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/cancel": {
+      "post": {
+        "tags": ["Sessions"],
+        "summary": "Cancel session",
+        "operationId": "cancelSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CancelSessionInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session cancelled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Session" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/complete": {
+      "post": {
+        "tags": ["Sessions"],
+        "summary": "Complete session",
+        "operationId": "completeSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session completed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Session" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/no-show": {
+      "post": {
+        "tags": ["Sessions"],
+        "summary": "Mark no-show",
+        "operationId": "markNoShow",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session marked no-show",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Session" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/templates": {
+      "post": {
+        "tags": ["Workouts"],
+        "summary": "Create workout template",
+        "operationId": "createTemplate",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateWorkoutTemplateInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Template created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WorkoutTemplate" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      },
+      "get": {
+        "tags": ["Workouts"],
+        "summary": "List workout templates",
+        "operationId": "listTemplates",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 0 }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WorkoutTemplatesPaginatedResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/templates/{id}": {
+      "get": {
+        "tags": ["Workouts"],
+        "summary": "Get workout template",
+        "operationId": "getTemplate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WorkoutTemplate" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      },
+      "patch": {
+        "tags": ["Workouts"],
+        "summary": "Update workout template",
+        "operationId": "updateTemplate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateWorkoutTemplateInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Template updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WorkoutTemplate" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/coaches/workouts/assign": {
+      "post": {
+        "tags": ["Workouts"],
+        "summary": "Assign workout to client",
+        "operationId": "assignWorkout",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AssignWorkoutInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Workout assigned",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Workout" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/workouts/me": {
+      "get": {
+        "tags": ["Workouts"],
+        "summary": "List my workouts",
+        "operationId": "listMyWorkouts",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 0 }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workout list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WorkoutsPaginatedResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/workouts/me/{id}": {
+      "get": {
+        "tags": ["Workouts"],
+        "summary": "Get my workout",
+        "operationId": "getMyWorkout",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workout",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Workout" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/workouts/me/{id}/start": {
+      "post": {
+        "tags": ["Workouts"],
+        "summary": "Start workout",
+        "operationId": "startMyWorkout",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workout started",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Workout" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/workouts/me/{id}/complete": {
+      "post": {
+        "tags": ["Workouts"],
+        "summary": "Complete workout",
+        "operationId": "completeMyWorkout",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workout completed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Workout" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/workouts/exercises/{id}/complete": {
+      "post": {
+        "tags": ["Workouts"],
+        "summary": "Mark workout exercise complete",
+        "operationId": "markWorkoutExerciseComplete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exercise completed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WorkoutExercise" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/workouts/exercises/{id}/skip": {
+      "post": {
+        "tags": ["Workouts"],
+        "summary": "Skip workout exercise",
+        "operationId": "skipWorkoutExercise",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SkipWorkoutExerciseInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exercise skipped",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WorkoutExercise" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/workouts/exercises/{id}/logs": {
+      "post": {
+        "tags": ["Workouts"],
+        "summary": "Create workout exercise log",
+        "operationId": "createWorkoutLog",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateWorkoutLogInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Workout log created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WorkoutLog" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/workouts/logs/{id}": {
+      "patch": {
+        "tags": ["Workouts"],
+        "summary": "Update workout log",
+        "operationId": "updateWorkoutLog",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateWorkoutLogInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Workout log updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WorkoutLog" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/messages/conversations": {
+      "get": {
+        "tags": ["Messages"],
+        "summary": "List conversations",
+        "operationId": "listConversations",
+        "responses": {
+          "200": {
+            "description": "Conversation list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ConversationsResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      },
+      "post": {
+        "tags": ["Messages"],
+        "summary": "Get or create conversation",
+        "operationId": "getOrCreateConversation",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateConversationInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conversation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Conversation" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/messages/conversations/{id}": {
+      "get": {
+        "tags": ["Messages"],
+        "summary": "Get conversation",
+        "operationId": "getConversation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Conversation" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/messages/conversations/{id}/messages": {
+      "get": {
+        "tags": ["Messages"],
+        "summary": "List conversation messages",
+        "operationId": "listMessages",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 0 }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessagesPaginatedResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      },
+      "post": {
+        "tags": ["Messages"],
+        "summary": "Send message",
+        "operationId": "sendMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SendMessageInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Message sent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Message" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/messages/conversations/{id}/read": {
+      "post": {
+        "tags": ["Messages"],
+        "summary": "Mark conversation read",
+        "operationId": "markConversationRead",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Marked read",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/messages/unread-count": {
+      "get": {
+        "tags": ["Messages"],
+        "summary": "Get unread count",
+        "operationId": "getUnreadCount",
+        "responses": {
+          "200": {
+            "description": "Unread count",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnreadCountResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/subscriptions/revenuecat/webhook": {
+      "post": {
+        "tags": ["Subscriptions"],
+        "summary": "RevenueCat webhook ingest",
+        "operationId": "revenueCatWebhook",
+        "security": [],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "RevenueCat webhook authorization header configured in dashboard."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RevenueCatWebhookPayload" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook accepted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StatusResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/subscriptions/me": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "summary": "Get my subscription",
+        "operationId": "getMySubscription",
+        "responses": {
+          "200": {
+            "description": "Subscription",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Subscription" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/features/{feature}/access": {
+      "get": {
+        "tags": ["Features"],
+        "summary": "Check feature access",
+        "operationId": "checkFeatureAccess",
+        "parameters": [
+          {
+            "name": "feature",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Feature access",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FeatureAccessResult" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not found",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflict",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": { "type": "string" }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": { "type": "string" }
+        }
+      },
+      "StatusResponse": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "type": "string" }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status", "version"],
+        "properties": {
+          "status": { "type": "string" },
+          "version": { "type": "string" }
+        }
+      },
+      "UnreadCountResponse": {
+        "type": "object",
+        "required": ["unread_count"],
+        "properties": {
+          "unread_count": { "type": "integer" }
+        }
+      },
+      "SlotsResponse": {
+        "type": "object",
+        "required": ["data", "total"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BookableSlot" }
+          },
+          "total": { "type": "integer" }
+        }
+      },
+      "AvailabilityResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CoachAvailability" }
+          }
+        }
+      },
+      "AvailabilityOverridesResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CoachAvailabilityOverride" }
+          }
+        }
+      },
+      "SessionTypesResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SessionType" }
+          }
+        }
+      },
+      "SessionsResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Session" }
+          }
+        }
+      },
+      "ConversationsResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Conversation" }
+          }
+        }
+      },
+      "MessagesPaginatedResponse": {
+        "type": "object",
+        "required": ["data", "total", "limit", "offset"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Message" }
+          },
+          "total": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "offset": { "type": "integer" }
+        }
+      },
+      "WorkoutTemplatesPaginatedResponse": {
+        "type": "object",
+        "required": ["data", "total", "limit", "offset"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WorkoutTemplate" }
+          },
+          "total": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "offset": { "type": "integer" }
+        }
+      },
+      "WorkoutsPaginatedResponse": {
+        "type": "object",
+        "required": ["data", "total", "limit", "offset"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Workout" }
+          },
+          "total": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "offset": { "type": "integer" }
+        }
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "user_id": { "type": "integer" },
+          "first_name": { "type": "string" },
+          "last_name": { "type": "string" },
+          "avatar_url": { "type": "string" },
+          "phone": { "type": "string" },
+          "timezone": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "UserSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "email": { "type": "string", "format": "email" },
+          "profile": { "$ref": "#/components/schemas/Profile" }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "email": { "type": "string", "format": "email" },
+          "email_verified": { "type": "boolean" },
+          "email_verified_at": { "type": "string", "format": "date-time" },
+          "is_active": { "type": "boolean" },
+          "is_banned": { "type": "boolean" },
+          "last_login_at": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "profile": { "$ref": "#/components/schemas/Profile" }
+        }
+      },
+      "SocialLinks": {
+        "type": "object",
+        "properties": {
+          "instagram": { "type": "string" },
+          "youtube": { "type": "string" },
+          "tiktok": { "type": "string" },
+          "website": { "type": "string" },
+          "linkedin": { "type": "string" },
+          "facebook": { "type": "string" },
+          "twitter": { "type": "string" },
+          "other": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      },
+      "CoachStats": {
+        "type": "object",
+        "properties": {
+          "active_clients": { "type": "integer" },
+          "total_clients_all_time": { "type": "integer" },
+          "clients_this_month": { "type": "integer" },
+          "workouts_assigned_total": { "type": "integer" },
+          "workouts_completed_total": { "type": "integer" },
+          "sessions_completed_total": { "type": "integer" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Certification": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "name": { "type": "string" },
+          "issuing_org": { "type": "string" },
+          "description": { "type": "string" },
+          "certificate_url": { "type": "string" },
+          "issued_date": { "type": "string", "format": "date" },
+          "expiry_date": { "type": "string", "format": "date" },
+          "is_verified": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CoachLocation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "address": { "type": "string" },
+          "city": { "type": "string" },
+          "state": { "type": "string" },
+          "zip_code": { "type": "string" },
+          "country": { "type": "string" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "is_primary": { "type": "boolean" },
+          "is_active": { "type": "boolean" },
+          "notes": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CoachProfileLite": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "user_id": { "type": "integer" },
+          "business_name": { "type": "string" }
+        }
+      },
+      "CoachProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "user_id": { "type": "integer" },
+          "business_name": { "type": "string" },
+          "bio": { "type": "string" },
+          "cover_photo_url": { "type": "string" },
+          "specialties": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "years_experience": { "type": "integer" },
+          "languages": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "training_type": { "type": "string" },
+          "hourly_rate": { "type": "number" },
+          "hourly_rate_currency": { "type": "string" },
+          "social_links": { "$ref": "#/components/schemas/SocialLinks" },
+          "subscription_tier": { "type": "string" },
+          "subscription_expires_at": { "type": "string", "format": "date-time" },
+          "onboarding_completed": { "type": "boolean" },
+          "is_accepting_clients": { "type": "boolean" },
+          "last_active_at": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "certifications": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Certification" }
+          },
+          "locations": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CoachLocation" }
+          },
+          "stats": { "$ref": "#/components/schemas/CoachStats" }
+        }
+      },
+      "ClientProfileLite": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "user_id": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "status": { "type": "string" }
+        }
+      },
+      "ClientProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "user_id": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "status": { "type": "string" },
+          "goals": { "type": "string" },
+          "program_type": { "type": "string" },
+          "sessions_per_week": { "type": "integer" },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "last_contact_at": { "type": "string", "format": "date-time" },
+          "invited_at": { "type": "string", "format": "date-time" },
+          "joined_at": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "user": { "$ref": "#/components/schemas/UserSummary" },
+          "coach": { "$ref": "#/components/schemas/CoachProfileLite" }
+        }
+      },
+      "InviteCode": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "code": { "type": "string" },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "used_by": { "type": "integer" },
+          "used_at": { "type": "string", "format": "date-time" },
+          "is_active": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "InvitePreview": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "coach_id": { "type": "integer" },
+          "business_name": { "type": "string" },
+          "expires_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AcceptInviteResult": {
+        "type": "object",
+        "properties": {
+          "client_profile": { "$ref": "#/components/schemas/ClientProfile" },
+          "already_connected": { "type": "boolean" }
+        }
+      },
+      "AuthResult": {
+        "type": "object",
+        "required": ["access_token", "refresh_token", "token_type", "expires_at", "user"],
+        "properties": {
+          "access_token": { "type": "string" },
+          "refresh_token": { "type": "string" },
+          "token_type": { "type": "string" },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "user": { "$ref": "#/components/schemas/UserSummary" }
+        }
+      },
+      "RegisterInput": {
+        "type": "object",
+        "required": ["email", "password", "first_name", "last_name"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 8 },
+          "first_name": { "type": "string" },
+          "last_name": { "type": "string" },
+          "phone": { "type": "string" },
+          "timezone": { "type": "string" }
+        }
+      },
+      "LoginInput": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        }
+      },
+      "RefreshInput": {
+        "type": "object",
+        "required": ["refresh_token"],
+        "properties": {
+          "refresh_token": { "type": "string" }
+        }
+      },
+      "LogoutInput": {
+        "type": "object",
+        "properties": {
+          "refresh_token": { "type": "string" },
+          "all_devices": { "type": "boolean" }
+        }
+      },
+      "UpdateMeInput": {
+        "type": "object",
+        "properties": {
+          "first_name": { "type": "string" },
+          "last_name": { "type": "string" },
+          "phone": { "type": "string" },
+          "avatar_url": { "type": "string" },
+          "timezone": { "type": "string" }
+        }
+      },
+      "UpsertCoachProfileInput": {
+        "type": "object",
+        "properties": {
+          "business_name": { "type": "string" },
+          "bio": { "type": "string" },
+          "cover_photo_url": { "type": "string" },
+          "specialties": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "years_experience": { "type": "integer" },
+          "languages": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "training_type": { "type": "string" },
+          "hourly_rate": { "type": "number" },
+          "hourly_rate_currency": { "type": "string" },
+          "show_rate": { "type": "boolean" },
+          "social_links": { "$ref": "#/components/schemas/SocialLinks" },
+          "onboarding_completed": { "type": "boolean" },
+          "is_accepting_clients": { "type": "boolean" }
+        }
+      },
+      "CreateInviteCodeInput": {
+        "type": "object",
+        "properties": {
+          "expires_in_days": { "type": "integer" }
+        }
+      },
+      "AcceptInviteInput": {
+        "type": "object",
+        "required": ["code"],
+        "properties": {
+          "code": { "type": "string" }
+        }
+      },
+      "TemplateExerciseInput": {
+        "type": "object",
+        "required": ["exercise_id"],
+        "properties": {
+          "exercise_id": { "type": "integer", "minimum": 1 },
+          "order_index": { "type": "integer" },
+          "section_label": { "type": "string" },
+          "superset_group": { "type": "integer" },
+          "group_type": { "type": "string" },
+          "sets": { "type": "integer" },
+          "reps_min": { "type": "integer" },
+          "reps_max": { "type": "integer" },
+          "weight_value": { "type": "number" },
+          "weight_unit": { "type": "string" },
+          "prescription_note": { "type": "string" },
+          "rest_seconds": { "type": "integer" },
+          "tempo": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      },
+      "CreateWorkoutTemplateInput": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "category": { "type": "string" },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "estimated_minutes": { "type": "integer" },
+          "exercises": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TemplateExerciseInput" }
+          }
+        }
+      },
+      "UpdateWorkoutTemplateInput": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "category": { "type": "string" },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "estimated_minutes": { "type": "integer" },
+          "is_active": { "type": "boolean" },
+          "exercises": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TemplateExerciseInput" }
+          }
+        }
+      },
+      "AssignWorkoutInput": {
+        "type": "object",
+        "required": ["template_id", "client_profile_id"],
+        "properties": {
+          "template_id": { "type": "integer", "minimum": 1 },
+          "client_profile_id": { "type": "integer", "minimum": 1 },
+          "scheduled_date": { "type": "string", "format": "date" }
+        }
+      },
+      "SkipWorkoutExerciseInput": {
+        "type": "object",
+        "required": ["reason"],
+        "properties": {
+          "reason": { "type": "string" }
+        }
+      },
+      "CreateWorkoutLogInput": {
+        "type": "object",
+        "required": ["set_number"],
+        "properties": {
+          "set_number": { "type": "integer" },
+          "reps_completed": { "type": "integer" },
+          "weight_used": { "type": "number" },
+          "weight_unit": { "type": "string" },
+          "rpe": { "type": "integer" },
+          "notes": { "type": "string" },
+          "duration_seconds": { "type": "integer" },
+          "distance": { "type": "number" },
+          "distance_unit": { "type": "string" }
+        }
+      },
+      "UpdateWorkoutLogInput": {
+        "type": "object",
+        "properties": {
+          "set_number": { "type": "integer" },
+          "reps_completed": { "type": "integer" },
+          "weight_used": { "type": "number" },
+          "weight_unit": { "type": "string" },
+          "rpe": { "type": "integer" },
+          "notes": { "type": "string" },
+          "duration_seconds": { "type": "integer" },
+          "distance": { "type": "number" },
+          "distance_unit": { "type": "string" }
+        }
+      },
+      "WorkoutTemplateExercise": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "template_id": { "type": "integer" },
+          "exercise_id": { "type": "integer" },
+          "order_index": { "type": "integer" },
+          "section_label": { "type": "string" },
+          "superset_group": { "type": "integer" },
+          "group_type": { "type": "string" },
+          "sets": { "type": "integer" },
+          "reps_min": { "type": "integer" },
+          "reps_max": { "type": "integer" },
+          "weight_value": { "type": "number" },
+          "weight_unit": { "type": "string" },
+          "prescription_note": { "type": "string" },
+          "rest_seconds": { "type": "integer" },
+          "tempo": { "type": "string" },
+          "notes": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "WorkoutTemplate": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "category": { "type": "string" },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "estimated_minutes": { "type": "integer" },
+          "is_active": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "exercises": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WorkoutTemplateExercise" }
+          }
+        }
+      },
+      "ExerciseRef": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" }
+        }
+      },
+      "WorkoutLog": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "workout_exercise_id": { "type": "integer" },
+          "set_number": { "type": "integer" },
+          "reps_completed": { "type": "integer" },
+          "weight_used": { "type": "number" },
+          "weight_unit": { "type": "string" },
+          "rpe": { "type": "integer" },
+          "notes": { "type": "string" },
+          "duration_seconds": { "type": "integer" },
+          "distance": { "type": "number" },
+          "distance_unit": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "WorkoutExercise": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "workout_id": { "type": "integer" },
+          "exercise_id": { "type": "integer" },
+          "order_index": { "type": "integer" },
+          "section_label": { "type": "string" },
+          "superset_group": { "type": "integer" },
+          "group_type": { "type": "string" },
+          "sets": { "type": "integer" },
+          "reps_min": { "type": "integer" },
+          "reps_max": { "type": "integer" },
+          "weight_value": { "type": "number" },
+          "weight_unit": { "type": "string" },
+          "prescription_note": { "type": "string" },
+          "rest_seconds": { "type": "integer" },
+          "tempo": { "type": "string" },
+          "notes": { "type": "string" },
+          "is_completed": { "type": "boolean" },
+          "skipped_reason": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "exercise": { "$ref": "#/components/schemas/ExerciseRef" },
+          "logs": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WorkoutLog" }
+          }
+        }
+      },
+      "Workout": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "client_id": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "template_id": { "type": "integer" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "scheduled_date": { "type": "string", "format": "date" },
+          "status": { "type": "string" },
+          "started_at": { "type": "string", "format": "date-time" },
+          "completed_at": { "type": "string", "format": "date-time" },
+          "client_notes": { "type": "string" },
+          "coach_notes": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "client": { "$ref": "#/components/schemas/ClientProfile" },
+          "exercises": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WorkoutExercise" }
+          }
+        }
+      },
+      "CreateConversationInput": {
+        "type": "object",
+        "required": ["client_profile_id"],
+        "properties": {
+          "client_profile_id": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "SendMessageInput": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string" },
+          "media_url": { "type": "string" },
+          "media_type": { "type": "string" }
+        }
+      },
+      "Conversation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "client_id": { "type": "integer" },
+          "last_message_at": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "coach": { "$ref": "#/components/schemas/CoachProfileLite" },
+          "client": { "$ref": "#/components/schemas/ClientProfile" }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "conversation_id": { "type": "integer" },
+          "sender_id": { "type": "integer" },
+          "content": { "type": "string" },
+          "media_url": { "type": "string" },
+          "media_type": { "type": "string" },
+          "read_at": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RevenueCatWebhookPayload": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "Subscription": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "user_id": { "type": "integer" },
+          "revenuecat_customer_id": { "type": "string" },
+          "product_id": { "type": "string" },
+          "platform": { "type": "string" },
+          "status": { "type": "string" },
+          "current_period_start": { "type": "string", "format": "date-time" },
+          "current_period_end": { "type": "string", "format": "date-time" },
+          "trial_start": { "type": "string", "format": "date-time" },
+          "trial_end": { "type": "string", "format": "date-time" },
+          "cancelled_at": { "type": "string", "format": "date-time" },
+          "cancellation_reason": { "type": "string" },
+          "will_renew": { "type": "boolean" },
+          "unsubscribe_detected_at": { "type": "string", "format": "date-time" },
+          "billing_issue_detected_at": { "type": "string", "format": "date-time" },
+          "original_transaction_id": { "type": "string" },
+          "latest_transaction_id": { "type": "string" },
+          "store_environment": { "type": "string" },
+          "first_purchased_at": { "type": "string", "format": "date-time" },
+          "last_renewal_at": { "type": "string", "format": "date-time" },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "FeatureAccessResult": {
+        "type": "object",
+        "required": ["feature", "allowed", "reason", "subscription_status"],
+        "properties": {
+          "feature": { "type": "string" },
+          "allowed": { "type": "boolean" },
+          "reason": { "type": "string" },
+          "subscription_status": { "type": "string" }
+        }
+      },
+      "AvailabilitySlotInput": {
+        "type": "object",
+        "required": ["day_of_week", "start_time", "end_time"],
+        "properties": {
+          "day_of_week": { "type": "integer", "minimum": 0, "maximum": 6 },
+          "start_time": { "type": "string", "example": "09:00" },
+          "end_time": { "type": "string", "example": "17:00" },
+          "is_active": { "type": "boolean" }
+        }
+      },
+      "SetAvailabilityInput": {
+        "type": "object",
+        "properties": {
+          "slots": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AvailabilitySlotInput" }
+          }
+        }
+      },
+      "CreateAvailabilityOverrideInput": {
+        "type": "object",
+        "required": ["date"],
+        "properties": {
+          "date": { "type": "string", "format": "date" },
+          "is_available": { "type": "boolean" },
+          "start_time": { "type": "string", "example": "09:00" },
+          "end_time": { "type": "string", "example": "12:00" },
+          "reason": { "type": "string" }
+        }
+      },
+      "CreateSessionTypeInput": {
+        "type": "object",
+        "required": ["name", "duration_minutes"],
+        "properties": {
+          "name": { "type": "string" },
+          "duration_minutes": { "type": "integer", "minimum": 1 },
+          "description": { "type": "string" },
+          "color": { "type": "string" }
+        }
+      },
+      "UpdateSessionTypeInput": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "duration_minutes": { "type": "integer", "minimum": 1 },
+          "description": { "type": "string" },
+          "color": { "type": "string" },
+          "is_active": { "type": "boolean" }
+        }
+      },
+      "BookSessionInput": {
+        "type": "object",
+        "required": ["client_profile_id", "session_type_id", "scheduled_at"],
+        "properties": {
+          "client_profile_id": { "type": "integer", "minimum": 1 },
+          "session_type_id": { "type": "integer", "minimum": 1 },
+          "scheduled_at": { "type": "string", "format": "date-time" },
+          "location": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      },
+      "CancelSessionInput": {
+        "type": "object",
+        "properties": {
+          "reason": { "type": "string" }
+        }
+      },
+      "CoachAvailability": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "day_of_week": { "type": "integer" },
+          "start_time": { "type": "string" },
+          "end_time": { "type": "string" },
+          "is_active": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CoachAvailabilityOverride": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "date": { "type": "string", "format": "date" },
+          "is_available": { "type": "boolean" },
+          "start_time": { "type": "string" },
+          "end_time": { "type": "string" },
+          "reason": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "SessionType": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "name": { "type": "string" },
+          "duration_minutes": { "type": "integer" },
+          "description": { "type": "string" },
+          "color": { "type": "string" },
+          "is_active": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "client_id": { "type": "integer" },
+          "session_type_id": { "type": "integer" },
+          "scheduled_at": { "type": "string", "format": "date-time" },
+          "duration_minutes": { "type": "integer" },
+          "status": { "type": "string" },
+          "location": { "type": "string" },
+          "notes": { "type": "string" },
+          "cancelled_at": { "type": "string", "format": "date-time" },
+          "cancelled_by": { "type": "string" },
+          "cancellation_reason": { "type": "string" },
+          "completed_at": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "coach": { "$ref": "#/components/schemas/CoachProfileLite" },
+          "client": { "$ref": "#/components/schemas/ClientProfile" },
+          "session_type": { "$ref": "#/components/schemas/SessionType" }
+        }
+      },
+      "BookableSlot": {
+        "type": "object",
+        "required": ["start_at", "end_at", "duration_minutes", "coach_id"],
+        "properties": {
+          "start_at": { "type": "string", "format": "date-time" },
+          "end_at": { "type": "string", "format": "date-time" },
+          "duration_minutes": { "type": "integer" },
+          "coach_id": { "type": "integer" },
+          "session_type_id": { "type": "integer" }
+        }
+      }
+    }
+  }
+}
