@@ -22,6 +22,8 @@ var (
 	ErrFeatureNameRequired            = errors.New("feature name is required")
 )
 
+const freeTierClientLimit = 3
+
 type SubscriptionService struct {
 	repos                 *repositories.RepositoriesCollection
 	subscriptionRepo      *repositories.SubscriptionRepository
@@ -200,6 +202,51 @@ func (s *SubscriptionService) CheckFeatureAccess(ctx context.Context, userID uin
 	}
 
 	hasPaidAccess := hasPaidSubscriptionAccess(sub.Status)
+	if normalizedFeature == "invite_clients" {
+		if hasPaidAccess {
+			return &FeatureAccessResult{
+				Feature:            normalizedFeature,
+				Allowed:            true,
+				Reason:             "subscription_active",
+				SubscriptionStatus: sub.Status,
+			}, nil
+		}
+
+		coachProfile, err := s.repos.Coach.GetByUserID(ctx, userID)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return &FeatureAccessResult{
+					Feature:            normalizedFeature,
+					Allowed:            false,
+					Reason:             "coach_profile_required",
+					SubscriptionStatus: sub.Status,
+				}, nil
+			}
+			return nil, err
+		}
+
+		activeClients := 0
+		if coachProfile.Stats != nil {
+			activeClients = coachProfile.Stats.ActiveClients
+		}
+
+		if activeClients < freeTierClientLimit {
+			return &FeatureAccessResult{
+				Feature:            normalizedFeature,
+				Allowed:            true,
+				Reason:             "free_tier_available",
+				SubscriptionStatus: sub.Status,
+			}, nil
+		}
+
+		return &FeatureAccessResult{
+			Feature:            normalizedFeature,
+			Allowed:            false,
+			Reason:             "free_tier_limit_reached",
+			SubscriptionStatus: sub.Status,
+		}, nil
+	}
+
 	reason := "subscription_required"
 	if hasPaidAccess {
 		reason = "subscription_active"
