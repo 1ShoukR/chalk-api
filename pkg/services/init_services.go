@@ -22,7 +22,7 @@ func InitializeServices(
 	return &ServicesCollection{
 		Events:       eventsPublisher,
 		Auth:         NewAuthService(repos.User, repos.Auth, cfg.JWTSecret, cfg.JWTExpirationHours),
-		User:         NewUserService(repos.User),
+		User:         NewUserService(repos.User, repos.Coach, repos.Client),
 		Coach:        NewCoachService(repos, eventsPublisher),
 		Session:      NewSessionService(repos, eventsPublisher),
 		Workout:      NewWorkoutService(repos, eventsPublisher),

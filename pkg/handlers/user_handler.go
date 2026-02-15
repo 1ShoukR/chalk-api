@@ -62,3 +62,19 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 
 	c.JSON(http.StatusOK, user)
 }
+
+func (h *UserHandler) GetCapabilities(c *gin.Context) {
+	userID, ok := utils.GetUserIDFromContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	capabilities, err := h.userService.GetCapabilities(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch account capabilities"})
+		return
+	}
+
+	c.JSON(http.StatusOK, capabilities)
+}

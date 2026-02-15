@@ -52,6 +52,7 @@ func SetupRouter(h *handlers.HandlersCollection, cfg config.Environment) *gin.En
 			{
 				users.GET("/me", h.User.GetMe)
 				users.PATCH("/me", h.User.UpdateMe)
+				users.GET("/capabilities", h.User.GetCapabilities)
 			}
 
 			coaches := protected.Group("/coaches")

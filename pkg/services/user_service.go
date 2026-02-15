@@ -21,11 +21,31 @@ type UpdateMeInput struct {
 }
 
 type UserService struct {
-	userRepo *repositories.UserRepository
+	userRepo   *repositories.UserRepository
+	coachRepo  *repositories.CoachRepository
+	clientRepo *repositories.ClientRepository
 }
 
-func NewUserService(userRepo *repositories.UserRepository) *UserService {
-	return &UserService{userRepo: userRepo}
+func NewUserService(
+	userRepo *repositories.UserRepository,
+	coachRepo *repositories.CoachRepository,
+	clientRepo *repositories.ClientRepository,
+) *UserService {
+	return &UserService{
+		userRepo:   userRepo,
+		coachRepo:  coachRepo,
+		clientRepo: clientRepo,
+	}
+}
+
+type ModeCapability struct {
+	Available   bool   `json:"available"`
+	SetupStatus string `json:"setup_status"`
+}
+
+type AccountCapabilitiesResponse struct {
+	Coach  ModeCapability `json:"coach"`
+	Client ModeCapability `json:"client"`
 }
 
 func (s *UserService) GetMe(ctx context.Context, userID uint) (*models.User, error) {
@@ -73,4 +93,42 @@ func (s *UserService) UpdateMe(ctx context.Context, userID uint, input UpdateMeI
 	}
 
 	return s.userRepo.GetByID(ctx, userID)
+}
+
+func (s *UserService) GetCapabilities(ctx context.Context, userID uint) (*AccountCapabilitiesResponse, error) {
+	response := &AccountCapabilitiesResponse{
+		Coach: ModeCapability{
+			Available:   false,
+			SetupStatus: "not_started",
+		},
+		Client: ModeCapability{
+			Available:   false,
+			SetupStatus: "not_started",
+		},
+	}
+
+	coachProfile, err := s.coachRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+	} else {
+		response.Coach.Available = true
+		if coachProfile.OnboardingCompleted {
+			response.Coach.SetupStatus = "complete"
+		} else {
+			response.Coach.SetupStatus = "in_progress"
+		}
+	}
+
+	clientProfiles, err := s.clientRepo.ListByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if len(clientProfiles) > 0 {
+		response.Client.Available = true
+		response.Client.SetupStatus = "complete"
+	}
+
+	return response, nil
 }

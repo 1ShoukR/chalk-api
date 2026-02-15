@@ -267,6 +267,25 @@
         }
       }
     },
+    "/api/v1/users/capabilities": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get account capabilities",
+        "operationId": "getMyCapabilities",
+        "responses": {
+          "200": {
+            "description": "Account capabilities",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AccountCapabilitiesResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
     "/api/v1/coaches/me": {
       "get": {
         "tags": ["Coaches"],
@@ -2045,6 +2064,25 @@
           "phone": { "type": "string" },
           "avatar_url": { "type": "string" },
           "timezone": { "type": "string" }
+        }
+      },
+      "ModeCapability": {
+        "type": "object",
+        "required": ["available", "setup_status"],
+        "properties": {
+          "available": { "type": "boolean" },
+          "setup_status": {
+            "type": "string",
+            "enum": ["not_started", "in_progress", "complete"]
+          }
+        }
+      },
+      "AccountCapabilitiesResponse": {
+        "type": "object",
+        "required": ["coach", "client"],
+        "properties": {
+          "coach": { "$ref": "#/components/schemas/ModeCapability" },
+          "client": { "$ref": "#/components/schemas/ModeCapability" }
         }
       },
       "UpsertCoachProfileInput": {
